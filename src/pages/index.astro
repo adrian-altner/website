@@ -1,5 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import LatestPosts from '@/components/LatestPosts.astro';
 
 const title = 'Adrian Altner';
 const description = 'My personal website.';
@@ -9,6 +10,7 @@ const description = 'My personal website.';
 	<section class="hero">
 		<h1>Wellcome!</h1>
 	</section>
+	<LatestPosts title="Latest posts" />
 </BaseLayout>
 
 <style>

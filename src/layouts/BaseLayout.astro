@@ -1,8 +1,8 @@
 ---
-import '../styles/global.css';
-import type { ImageMetadata } from 'astro';
-import FallbackImage from '../assets/blog-placeholder-1.jpg';
-import NavLink from '../components/NavLink.astro';
+import "../styles/global.css";
+import type { ImageMetadata } from "astro";
+import FallbackImage from "@/assets/blog-placeholder-1.jpg";
+import NavLink from "@/components/NavLink.astro";
 
 interface Props {
 	title: string;
@@ -20,78 +20,102 @@ const { title, description, image = FallbackImage } = Astro.props;
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="sitemap" href="/sitemap-index.xml" />
-<link
-	rel="alternate"
-	type="application/rss+xml"
-	title={title}
-	href={new URL('rss.xml', Astro.site)}
-/>
-<meta name="generator" content={Astro.generator} />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="sitemap" href="/sitemap-index.xml" />
+		<link
+			rel="alternate"
+			type="application/rss+xml"
+			title={title}
+			href={new URL("rss.xml", Astro.site)}
+		/>
+		<meta name="generator" content={Astro.generator} />
 
-<!-- Font preloads -->
-<link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
-<link rel="preload" href="/fonts/atkinson-bold.woff" as="font" type="font/woff" crossorigin />
+		<!-- Font preloads -->
+		<link
+			rel="preload"
+			href="/fonts/atkinson-regular.woff"
+			as="font"
+			type="font/woff"
+			crossorigin
+		/>
+		<link
+			rel="preload"
+			href="/fonts/atkinson-bold.woff"
+			as="font"
+			type="font/woff"
+			crossorigin
+		/>
 
-<!-- Canonical URL -->
-<link rel="canonical" href={canonicalURL} />
+		<!-- Canonical URL -->
+		<link rel="canonical" href={canonicalURL} />
 
-<!-- Primary Meta Tags -->
-<title>{title}</title>
-<meta name="title" content={title} />
-<meta name="description" content={description} />
+		<!-- Primary Meta Tags -->
+		<title>{title}</title>
+		<meta name="title" content={title} />
+		<meta name="description" content={description} />
 
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website" />
-<meta property="og:url" content={Astro.url} />
-<meta property="og:title" content={title} />
-<meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image.src, Astro.url)} />
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={Astro.url} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={new URL(image.src, Astro.url)} />
 
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={Astro.url} />
-<meta property="twitter:title" content={title} />
-<meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image.src, Astro.url)} />
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content={Astro.url} />
+		<meta property="twitter:title" content={title} />
+		<meta property="twitter:description" content={description} />
+		<meta
+			property="twitter:image"
+			content={new URL(image.src, Astro.url)}
+		/>
 	</head>
 	<body>
 		<header>
-	<nav>
-		<h2><a href="/">Adrian Altner</a></h2>
-		<div class="internal-links">
-			<NavLink href="/">Home</NavLink>
-			<NavLink href="/blog">Blog</NavLink>
-		</div>
-		<div class="social-links">
-			<a href="https://x.com/adrian_altner" target="_blank">
-				<span class="sr-only">Follow me on X</span>
-				<svg viewBox="0 0 300 271" aria-hidden="true" width="25" height="25">
-					<path
-						d="m236 0h46l-101 115 118 156h-92.6l-72.5-94.8-83 94.8h-46l107-123-113-148h94.9l65.5 86.6zm-16.1 244h25.5l-165-218h-27.4z"
-					/>
-				</svg>
-			</a>
-			<a href="https://github.com/adrian-altner" target="_blank">
-				<span class="sr-only">Go to my GitHub Profile</span>
-				<svg viewBox="0 0 16 16" aria-hidden="true" width="25" height="25"
-					><path
-						fill="currentColor"
-						d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"
-					></path></svg
-				>
-			</a>
-		</div>
-	</nav>
-</header>
+			<nav>
+				<h2><a href="/">Adrian Altner</a></h2>
+				<div class="internal-links">
+					<NavLink href="/">Home</NavLink>
+					<NavLink href="/blog">Blog</NavLink>
+				</div>
+				<div class="social-links">
+					<a href="https://x.com/adrian_altner" target="_blank">
+						<span class="sr-only">Follow me on X</span>
+						<svg
+							viewBox="0 0 300 271"
+							aria-hidden="true"
+							width="25"
+							height="25"
+						>
+							<path
+								d="m236 0h46l-101 115 118 156h-92.6l-72.5-94.8-83 94.8h-46l107-123-113-148h94.9l65.5 86.6zm-16.1 244h25.5l-165-218h-27.4z"
+							></path>
+						</svg>
+					</a>
+					<a href="https://github.com/adrian-altner" target="_blank">
+						<span class="sr-only">Go to my GitHub Profile</span>
+						<svg
+							viewBox="0 0 16 16"
+							aria-hidden="true"
+							width="25"
+							height="25"
+							><path
+								fill="currentColor"
+								d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"
+							></path></svg
+						>
+					</a>
+				</div>
+			</nav>
+		</header>
 		<main>
 			<slot />
 		</main>
 		<footer>
-	&copy; {today.getFullYear()} Adrian Altner. All rights reserved.
-</footer>
+			&copy; {today.getFullYear()} Adrian Altner. All rights reserved.
+		</footer>
 	</body>
 </html>
 
@@ -104,12 +128,15 @@ const { title, description, image = FallbackImage } = Astro.props;
 	}
 
 	main {
+		width: 100%;
+		max-width: calc(100% - 2em);
+		margin: auto;
+		padding: 3em 1em;
 		flex: 1;
 	}
 
 	footer {
-		padding: .5em;
-		background: linear-gradient(var(--gray-gradient)) no-repeat;
+		padding: 0.5em;
 		color: rgb(var(--gray));
 		font-size: 0.7em;
 		text-align: center;
@@ -135,7 +162,7 @@ const { title, description, image = FallbackImage } = Astro.props;
 		justify-content: space-between;
 	}
 	nav a {
-		padding: .5em 0.5em;
+		padding: 0.5em 0.5em;
 		color: var(--black);
 		border-bottom: 3px solid transparent;
 		text-decoration: none;

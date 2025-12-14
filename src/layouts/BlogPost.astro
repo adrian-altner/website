@@ -1,9 +1,9 @@
 ---
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
-import BaseLayout from '../layouts/BaseLayout.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
 
-import FormattedDate from '../components/FormattedDate.astro';
+import FormattedDate from '@/components/FormattedDate.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
@@ -45,11 +45,7 @@ const {
 </BaseLayout>
 
 <style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
+			
 			.hero-image {
 				width: 100%;
 			}

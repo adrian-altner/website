@@ -1,21 +1,29 @@
 ---
-import { getCollection } from 'astro:content';
-import type { CollectionEntry } from 'astro:content';
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCollection, type CollectionEntry } from 'astro:content';
 import FormattedDate from '@/components/FormattedDate.astro';
+
+interface Props {
+	limit?: number;
+	title?: string;
+}
 
 type BlogEntry = CollectionEntry<'blog'>;
 
-const title = 'Blog';
-const description = 'Latest writing, learnings, and announcements.';
+const { limit = 3, title = 'Latest posts' } = Astro.props;
 
-const posts: BlogEntry[] = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts: BlogEntry[] = (await getCollection('blog'))
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, Math.max(0, limit));
 ---
 
-<BaseLayout title={title} description={description}>
-	<section class="posts">
+{posts.length > 0 ? (
+	<section class="latest-posts">
+		<div class="latest-posts__header">
+			<h2>{title}</h2>
+			<a href="/blog" class="latest-posts__view-all">
+				View all
+			</a>
+		</div>
 		<table class="post-table">
 			<thead>
 				<tr>
@@ -24,36 +32,55 @@ const posts: BlogEntry[] = (await getCollection('blog')).sort(
 				</tr>
 			</thead>
 			<tbody>
-				{
-					posts.map((post) => {
-						const { title: postTitle, pubDate } = post.data;
-						const href = `/blog/${post.id}/`;
+				{posts.map((post) => {
+					const { title: postTitle, pubDate } = post.data;
+					const href = `/blog/${post.id}/`;
 
-						return (
-							<tr>
-								<td class="post-table__title">
-									<a href={href}>
-										<span>{postTitle}</span>
-									</a>
-								</td>
-								<td class="post-table__date">
-										<FormattedDate date={pubDate} />
-								</td>
-							</tr>
-						);
-					})
-				}
+					return (
+						<tr>
+							<td class="post-table__title">
+								<a href={href}>
+									<span>{postTitle}</span>
+								</a>
+							</td>
+							<td class="post-table__date">
+								<FormattedDate date={pubDate} />
+							</td>
+						</tr>
+					);
+				})}
 			</tbody>
 		</table>
 	</section>
-</BaseLayout>
+) : null}
 
 <style>
-	.posts {
-		width: 720px;
-		max-width: calc(100% - 2rem);
+	.latest-posts {
+		padding: 2rem 1rem 0;
 		margin: 0 auto;
-		padding: 2rem 0 4rem;
+		max-width: 720px;
+	}
+
+	.latest-posts__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.latest-posts__header h2 {
+		margin: 0;
+		font-size: clamp(1.5rem, 2vw, 2rem);
+	}
+
+	.latest-posts__view-all {
+		font-size: 0.95rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--accent);
+		text-decoration: none;
 	}
 
 	.post-table {
@@ -101,7 +128,7 @@ const posts: BlogEntry[] = (await getCollection('blog')).sort(
 	}
 
 	.post-table__date {
-		font-size: .8em;
+		font-size: 0.8em;
 		white-space: nowrap;
 		width: 8rem;
 	}
@@ -119,6 +146,11 @@ const posts: BlogEntry[] = (await getCollection('blog')).sort(
 	}
 
 	@media (max-width: 720px) {
+		.latest-posts {
+			padding-inline: 0;
+		}
+
+		.latest-posts__header,
 		.post-table,
 		.post-table thead,
 		.post-table tbody,
@@ -157,6 +189,15 @@ const posts: BlogEntry[] = (await getCollection('blog')).sort(
 		.post-table__date {
 			padding-top: 0.25rem;
 			color: rgb(var(--gray));
+		}
+
+		.latest-posts__header {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.latest-posts__view-all {
+			padding-top: 0.25rem;
 		}
 	}
 </style>
