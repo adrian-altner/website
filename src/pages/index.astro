@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const title = 'Adrian Altner';
+const description = 'My personal website.';
+---
+
+<BaseLayout title={title} description={description}>
+	<section class="hero">
+		<h1>Wellcome!</h1>
+	</section>
+</BaseLayout>
+
+<style>
+	.hero {
+		padding: 4rem 1rem;
+		text-align: center;
+	}
+
+	.hero h1 {
+		margin-bottom: 1rem;
+		font-size: clamp(2.5rem, 5vw, 3.5rem);
+	}
+
+	.hero p {
+		margin: 0 auto;
+		max-width: 36rem;
+		color: rgb(var(--gray-dark));
+		font-size: 1.25rem;
+		line-height: 1.6;
+	}
+</style>

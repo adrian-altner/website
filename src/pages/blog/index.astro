@@ -1,0 +1,162 @@
+---
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+
+type BlogEntry = CollectionEntry<'blog'>;
+
+const title = 'Blog';
+const description = 'Latest writing, learnings, and announcements.';
+
+const posts: BlogEntry[] = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<BaseLayout title={title} description={description}>
+	<section class="posts">
+		<table class="post-table">
+			<thead>
+				<tr>
+					<th scope="col">Post</th>
+					<th scope="col">Published</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					posts.map((post) => {
+						const { title: postTitle, pubDate } = post.data;
+						const href = `/blog/${post.id}/`;
+
+						return (
+							<tr>
+								<td class="post-table__title">
+									<a href={href}>
+										<span>{postTitle}</span>
+									</a>
+								</td>
+								<td class="post-table__date">
+										<FormattedDate date={pubDate} />
+								</td>
+							</tr>
+						);
+					})
+				}
+			</tbody>
+		</table>
+	</section>
+</BaseLayout>
+
+<style>
+	.posts {
+		width: 960px;
+		max-width: calc(100% - 2rem);
+		margin: 0 auto;
+		padding: 2rem 0 4rem;
+	}
+
+	.post-table {
+		width: 100%;
+		border-collapse: collapse;
+		background: white;
+		box-shadow: var(--box-shadow);
+		border-radius: 12px;
+		overflow: hidden;
+	}
+
+	.post-table th,
+	.post-table td {
+		padding: 1rem;
+		text-align: left;
+		border-bottom: 1px solid rgba(var(--black), 0.08);
+		vertical-align: middle;
+	}
+
+	.post-table thead {
+		background: rgb(var(--gray-light));
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: rgb(var(--gray));
+	}
+
+	.post-table tr:last-child td {
+		border-bottom: none;
+	}
+
+	.post-table a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		color: inherit;
+		text-decoration: none;
+		transition: color 0.2s ease;
+	}
+
+	.post-table__title a {
+		font-weight: 600;
+		color: rgb(var(--black));
+	}
+
+	.post-table__date {
+		font-size: .8em;
+		white-space: nowrap;
+		width: 8rem;
+	}
+
+	.post-table a:hover {
+		color: var(--accent);
+	}
+
+	.post-table tr:hover {
+		background: rgba(var(--gray), 0.08);
+	}
+
+	.post-table__title a:hover {
+		color: var(--accent);
+	}
+
+	@media (max-width: 720px) {
+		.post-table,
+		.post-table thead,
+		.post-table tbody,
+		.post-table th,
+		.post-table td,
+		.post-table tr {
+			display: block;
+			width: 100%;
+		}
+
+		.post-table thead {
+			position: absolute;
+			clip: rect(0 0 0 0);
+			height: 1px;
+			width: 1px;
+			overflow: hidden;
+		}
+
+		.post-table tr {
+			border-bottom: 1px solid rgba(var(--black), 0.08);
+		}
+
+		.post-table td {
+			border: none;
+			padding: 1rem 1rem 0;
+		}
+
+		.post-table td:last-child {
+			padding-bottom: 1rem;
+		}
+
+		.post-table__title span {
+			font-size: 1.125rem;
+		}
+
+		.post-table__date {
+			padding-top: 0.25rem;
+			color: rgb(var(--gray));
+		}
+	}
+</style>
