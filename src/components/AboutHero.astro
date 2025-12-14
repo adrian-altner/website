@@ -1,0 +1,89 @@
+---
+interface Props {
+	title?: string;
+	tagline?: string;
+	description?: string;
+}
+
+const {
+	title = "Hi, I'm Adrian",
+	tagline = 'Frontend engineer & digital gardener',
+	description = `I build fast, enjoyable web experiences with Astro, TypeScript, and thoughtful content design. This site collects my notes, experiments, and longer-form writing.`,
+} = Astro.props;
+---
+
+<section class="about-hero">
+	<p class="about-hero__eyebrow">{tagline}</p>
+	<h1>{title}</h1>
+	<p class="about-hero__description">{description}</p>
+	<div class="about-hero__actions">
+		<a class="btn btn--primary" href="/blog">Read the blog</a>
+		<a class="btn btn--ghost" href="mailto:hello@adrianaltner.com"
+			>Email me</a
+		>
+	</div>
+</section>
+
+<style>
+	.about-hero {
+		padding: 4rem 1rem;
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1.25rem;
+		max-width: 48rem;
+		margin: 0 auto;
+	}
+
+	.about-hero__eyebrow {
+		margin: 0;
+		font-size: 0.95rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: rgb(var(--gray));
+		font-weight: 600;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(2.5rem, 5vw, 3.75rem);
+	}
+
+	.about-hero__description {
+		margin: 0;
+		font-size: 1.1rem;
+		line-height: 1.7;
+		color: rgb(var(--gray-dark));
+	}
+
+	.about-hero__actions {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.btn {
+		padding: 0.85rem 1.75rem;
+		border-radius: 999px;
+		font-weight: 600;
+		text-decoration: none;
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.btn--primary {
+		background: var(--accent);
+		color: white;
+		box-shadow: 0 8px 24px rgba(var(--accent), 0.35);
+	}
+
+	.btn--ghost {
+		border: 1px solid rgba(var(--black), 0.1);
+		color: rgb(var(--black));
+	}
+
+	.btn:hover {
+		transform: translateY(-1px);
+	}
+</style>
