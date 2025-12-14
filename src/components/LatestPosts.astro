@@ -29,7 +29,7 @@ const posts: BlogEntry[] = (await getCollection('blog'))
 		<table class="post-table">
 			<thead>
 				<tr>
-					<th scope="col">Post</th>
+					<th scope="col">Title</th>
 					<th scope="col">Published</th>
 				</tr>
 			</thead>
@@ -110,7 +110,7 @@ const posts: BlogEntry[] = (await getCollection('blog'))
 	}
 
 	.post-table thead {
-		background: rgb(var(--gray-light));
+		background: rgb(var(--gray-light), 0.80);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		font-size: 0.85rem;
@@ -146,7 +146,7 @@ const posts: BlogEntry[] = (await getCollection('blog'))
 		color: var(--accent);
 	}
 
-	.post-table tr:hover {
+	.post-table tbody tr:hover {
 		background: rgba(var(--gray), 0.08);
 	}
 
