@@ -1,0 +1,112 @@
+---
+title: 'Wie achis.blog läuft'
+description: 'Astro mit Node-Adapter, Caddy als Reverse Proxy und systemd auf einem eigenen Server — die komplette Konfiguration.'
+pubDate: 'Jul 08 2026'
+heroImage: '../../assets/blog-placeholder-2.jpg'
+---
+
+achis.blog läuft auf einem eigenen VPS. Kein Managed Hosting, kein Vercel, kein Netlify — stattdessen ein Server, ein Reverse Proxy und ein systemd-Service. Hier ist, wie das zusammenhängt.
+
+## Stack
+
+- **Astro** mit `@astrojs/node` im `standalone`-Modus als SSR-Server
+- **Caddy** als Reverse Proxy (HTTPS automatisch via Let's Encrypt)
+- **systemd** zum Verwalten des Node-Prozesses
+- **rsync + npm** als Deploy-Mechanismus
+
+## Astro: Node-Adapter
+
+Astro baut im `standalone`-Modus einen eigenen HTTP-Server, den man direkt mit Node starten kann:
+
+```js
+// astro.config.mjs
+import node from '@astrojs/node';
+
+export default defineConfig({
+  site: 'https://achis.blog',
+  adapter: node({ mode: 'standalone' }),
+});
+```
+
+Nach `astro build` liegt der Server unter `dist/server/entry.mjs`.
+
+## systemd-Service
+
+Der Node-Prozess läuft als systemd-Service, der bei einem Absturz automatisch neu startet:
+
+```ini
+[Unit]
+Description=achis.blog Astro Node server
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/opt/achis-blog
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOST=127.0.0.1
+Environment=SITE_ORIGIN=https://achis.blog
+ExecStart=/usr/bin/node ./dist/server/entry.mjs
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+`HOST=127.0.0.1` sorgt dafür, dass der Node-Server nur lokal erreichbar ist — nach außen kommt ausschließlich Caddy.
+
+## Caddy als Reverse Proxy
+
+Caddy übernimmt TLS und leitet Anfragen an den lokalen Node-Server weiter. `www` wird permanent auf die Apex-Domain umgeleitet:
+
+```caddy
+www.achis.blog {
+    redir https://achis.blog{uri} permanent
+}
+
+achis.blog {
+    reverse_proxy 127.0.0.1:3000
+}
+```
+
+Caddy holt das TLS-Zertifikat automatisch von Let's Encrypt — keine manuelle Zertifikatsverwaltung nötig.
+
+## Deploy-Script
+
+Ein einfaches Shell-Script baut lokal, synct den Output auf den Server und startet den Service neu:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+REMOTE_HOST="yaksha"
+REMOTE_DIR="/opt/achis-blog"
+SERVICE="achis-blog"
+
+cd "$(dirname "$0")/.."
+
+echo "==> Building..."
+npm run build
+
+echo "==> Syncing dist/, package.json, package-lock.json..."
+rsync -az --delete dist/ "$REMOTE_HOST:$REMOTE_DIR/dist/"
+rsync -az package.json package-lock.json "$REMOTE_HOST:$REMOTE_DIR/"
+
+echo "==> Installing production deps and restarting service..."
+ssh "$REMOTE_HOST" "cd $REMOTE_DIR && npm ci --omit=dev && sudo systemctl restart $SERVICE"
+
+echo "==> Done."
+```
+
+Das Build passiert lokal — auf den Server kommt nur das fertig gebaute `dist/` plus `package.json`. `npm ci --omit=dev` installiert dort nur die Production-Dependencies.
+
+## Ablauf von vorne bis hinten
+
+1. `bash scripts/deploy.sh` lokal ausführen
+2. Astro baut `dist/`
+3. rsync überträgt `dist/`, `package.json`, `package-lock.json`
+4. `npm ci --omit=dev` auf dem Server
+5. `systemctl restart achis-blog` startet den Node-Prozess neu
+6. Caddy routet neue Anfragen sofort an den frischen Prozess
