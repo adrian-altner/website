@@ -1,0 +1,59 @@
+---
+interface Props {
+	years: number[];
+	tags: string[];
+	activeYear?: number;
+	activeTag?: string;
+}
+
+const { years, tags, activeYear, activeTag } = Astro.props;
+---
+
+<div class="filters">
+	<hr />
+	{years.length > 0 && (
+		<>
+			<div class="years">
+				{years.map((year) => (
+					<a href={`/year/${year}/`} class:list={[{ active: year === activeYear }]}>{year}</a>
+				))}
+			</div>
+			{tags.length > 0 && <hr />}
+		</>
+	)}
+	{tags.length > 0 && (
+		<div class="tags">
+			{tags.map((tag) => (
+				<a href={`/tag/${tag}/`} class:list={[{ active: tag === activeTag }]}>#{tag}</a>
+			))}
+		</div>
+	)}
+	<hr />
+</div>
+
+<style>
+	.filters {
+		margin-bottom: 2em;
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
+	.filters hr {
+		margin: 0.6em 0;
+	}
+	.years, .tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6em 1.2em;
+	}
+	.years a, .tags a {
+		color: var(--muted);
+		text-decoration: underline;
+		font-size: 0.9em;
+	}
+	.years a:hover, .tags a:hover,
+	.years a.active, .tags a.active {
+		color: var(--accent);
+		font-weight: bold;
+	}
+</style>

@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import PostFilter from '../components/PostFilter.astro';
+import PostList from '../components/PostList.astro';
+import { SITE_TITLE } from '../consts';
+
+const posts = (await getCollection('posts')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const years = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
+const tags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
+---
+
+<!doctype html>
+<html lang="de">
+	<head>
+		<BaseHead title={`Blog — ${SITE_TITLE}`} description="Alle Beiträge" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Blog</h1>
+			<PostFilter {years} {tags} />
+			<PostList posts={posts} />
+		</main>
+		<Footer />
+	</body>
+</html>

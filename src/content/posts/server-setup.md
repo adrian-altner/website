@@ -2,6 +2,7 @@
 title: 'Wie achis.blog läuft'
 description: 'Astro mit Node-Adapter, Caddy als Reverse Proxy und systemd auf einem eigenen Server — die komplette Konfiguration.'
 pubDate: 'Jul 08 2026'
+tags: ['server', 'astro', 'linux']
 heroImage: '../../assets/blog-placeholder-2.jpg'
 ---
 
