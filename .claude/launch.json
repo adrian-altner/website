@@ -7,6 +7,13 @@
       "runtimeArgs": ["run", "dev"],
       "port": 4321,
       "autoPort": true
+    },
+    {
+      "name": "achis-blog-preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "port": 4321,
+      "autoPort": true
     }
   ]
 }

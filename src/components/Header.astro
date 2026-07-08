@@ -1,4 +1,6 @@
 ---
+import { Search } from '@lucide/astro';
+import SearchDialog from './SearchDialog.astro';
 import { SITE_TITLE } from '../consts';
 ---
 
@@ -8,8 +10,13 @@ import { SITE_TITLE } from '../consts';
 		<a href="/">Start</a>
 		<a href="/blog">Blog</a>
 		<a href="/about">Über mich</a>
+		<button type="button" id="search-trigger" aria-label="Suche öffnen">
+			<Search size={18} strokeWidth={2} />
+		</button>
 	</nav>
 </header>
+
+<SearchDialog />
 
 <script>
 	const links = document.querySelectorAll('header nav a');
@@ -42,6 +49,7 @@ import { SITE_TITLE } from '../consts';
 	}
 	nav {
 		display: flex;
+		align-items: center;
 		gap: 1em;
 		flex-wrap: wrap;
 		margin-bottom: 0;
@@ -55,6 +63,19 @@ import { SITE_TITLE } from '../consts';
 	nav a.active {
 		color: var(--accent-hover);
 		font-weight: bold;
+	}
+	#search-trigger {
+		display: inline-flex;
+		align-items: center;
+		background: none;
+		border: none;
+		padding: 0;
+		margin: 0;
+		color: var(--accent);
+		cursor: pointer;
+	}
+	#search-trigger:hover {
+		color: var(--accent-hover);
 	}
 	hr {
 		margin-top: 1.2em;

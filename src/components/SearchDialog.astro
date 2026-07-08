@@ -1,0 +1,234 @@
+---
+---
+
+<dialog id="search-dialog">
+	<form method="dialog" class="search-form">
+		<label for="search-input" class="sr-only">Suche</label>
+		<input id="search-input" type="search" placeholder="Suchen…" autocomplete="off" />
+	</form>
+	<div id="search-filters" hidden></div>
+	<p id="search-status"></p>
+	<ul id="search-results"></ul>
+</dialog>
+
+<script>
+	const trigger = document.getElementById('search-trigger');
+	const dialog = document.getElementById('search-dialog');
+	const input = document.getElementById('search-input');
+	const filtersEl = document.getElementById('search-filters');
+	const statusEl = document.getElementById('search-status');
+	const resultsEl = document.getElementById('search-results');
+
+	if (trigger && dialog && input && filtersEl && statusEl && resultsEl) {
+		let pagefind;
+		let pagefindPromise = null;
+		let currentQuery = '';
+		let activeTag = null;
+		let requestToken = 0;
+		let debounceTimer;
+
+		function loadPagefind() {
+			if (!pagefindPromise) {
+				// Runs only after `npm run build` generates this into dist/client/pagefind/ — indirect
+				// `Function` call keeps Vite's bundler from statically analyzing/rewriting the import,
+				// which otherwise breaks with a ReferenceError on the unresolved `__VITE_PRELOAD__` token.
+				const importPagefind = new Function('url', 'return import(url)');
+				pagefindPromise = importPagefind('/pagefind/pagefind.js')
+					.then(async (mod) => {
+						pagefind = mod;
+						// A search's `.filters` breakdown is only populated once `filters()` has
+						// run at least once on a fresh index — without this, the very first real
+						// query returns an empty filter map. runSearch() awaits this same promise
+						// before every search, so later calls resolve instantly.
+						await mod.filters().catch(() => {});
+					})
+					.catch(() => {
+						statusEl.textContent =
+							'Suche erfordert einen Production-Build (npm run build) — im Dev-Server nicht verfügbar.';
+					});
+			}
+			return pagefindPromise;
+		}
+
+		function renderChips(tagCounts) {
+			filtersEl.innerHTML = '';
+			const entries = Object.entries(tagCounts);
+			if (entries.length === 0) {
+				filtersEl.hidden = true;
+				return;
+			}
+			filtersEl.hidden = false;
+			for (const [value, count] of entries) {
+				const chip = document.createElement('button');
+				chip.type = 'button';
+				chip.className = 'chip';
+				if (value === activeTag) chip.classList.add('active');
+				chip.textContent = `#${value} (${count})`;
+				chip.addEventListener('click', () => {
+					activeTag = activeTag === value ? null : value;
+					runSearch();
+				});
+				filtersEl.appendChild(chip);
+			}
+		}
+
+		function renderResults(results) {
+			resultsEl.innerHTML = '';
+			if (results.length === 0) {
+				statusEl.textContent = 'Keine Ergebnisse.';
+				return;
+			}
+			statusEl.textContent = '';
+			for (const result of results) {
+				const li = document.createElement('li');
+				const a = document.createElement('a');
+				a.href = result.url;
+				a.textContent = result.meta?.title ?? result.url;
+				const p = document.createElement('p');
+				p.className = 'excerpt';
+				p.innerHTML = result.excerpt;
+				li.append(a, p);
+				resultsEl.appendChild(li);
+			}
+		}
+
+		async function runSearch() {
+			await loadPagefind();
+			if (!pagefind) return;
+			if (!currentQuery && !activeTag) {
+				resultsEl.innerHTML = '';
+				filtersEl.hidden = true;
+				filtersEl.innerHTML = '';
+				statusEl.textContent = '';
+				return;
+			}
+			const token = ++requestToken;
+			statusEl.textContent = 'Suche…';
+			const search = await pagefind.search(
+				currentQuery || null,
+				activeTag ? { filters: { tag: activeTag } } : undefined,
+			);
+			if (token !== requestToken) return;
+			const results = await Promise.all(search.results.slice(0, 20).map((r) => r.data()));
+			if (token !== requestToken) return;
+			renderChips(search.filters?.tag ?? {});
+			renderResults(results);
+		}
+
+		trigger.addEventListener('click', () => {
+			dialog.showModal();
+			input.focus();
+			loadPagefind();
+		});
+
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) dialog.close();
+		});
+
+		dialog.addEventListener('close', () => {
+			input.value = '';
+			currentQuery = '';
+			activeTag = null;
+			resultsEl.innerHTML = '';
+			filtersEl.hidden = true;
+			filtersEl.innerHTML = '';
+			statusEl.textContent = '';
+		});
+
+		input.addEventListener('input', () => {
+			clearTimeout(debounceTimer);
+			currentQuery = input.value.trim();
+			debounceTimer = setTimeout(runSearch, 180);
+		});
+	}
+</script>
+
+<style>
+	#search-dialog {
+		width: 600px;
+		max-width: calc(100% - 2em);
+		padding: 1.2em;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg);
+		color: var(--text);
+		font-family: var(--font-mono), ui-monospace, monospace;
+	}
+	#search-dialog::backdrop {
+		background: rgba(0, 0, 0, 0.4);
+	}
+	.search-form {
+		display: flex;
+	}
+	#search-input {
+		width: 100%;
+		padding: 0.5em 0.7em;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg);
+		color: var(--text);
+		font: inherit;
+		font-size: 1em;
+	}
+	#search-input:focus {
+		outline: none;
+		border-color: var(--accent);
+	}
+	#search-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5em;
+		margin-top: 0.8em;
+	}
+	#search-filters :global(.chip) {
+		font: inherit;
+		font-size: 0.85em;
+		color: var(--muted);
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		padding: 0.2em 0.7em;
+		cursor: pointer;
+	}
+	#search-filters :global(.chip:hover) {
+		color: var(--accent);
+	}
+	#search-filters :global(.chip.active) {
+		color: var(--bg);
+		background: var(--accent);
+		border-color: var(--accent);
+		font-weight: bold;
+	}
+	#search-status {
+		color: var(--muted);
+		font-size: 0.9em;
+		margin: 0.8em 0 0;
+	}
+	#search-results {
+		list-style: none;
+		padding: 0;
+		margin: 0.8em 0 0;
+		max-height: 50vh;
+		overflow-y: auto;
+	}
+	#search-results :global(li) {
+		padding: 0.6em 0;
+		border-top: 1px solid var(--border);
+	}
+	#search-results :global(li:first-child) {
+		border-top: none;
+	}
+	#search-results :global(a) {
+		font-weight: bold;
+	}
+	#search-results :global(.excerpt) {
+		color: var(--muted);
+		font-size: 0.9em;
+		margin: 0.2em 0 0;
+	}
+	#search-results :global(mark) {
+		background: var(--accent);
+		color: var(--bg);
+		border-radius: 2px;
+	}
+</style>
