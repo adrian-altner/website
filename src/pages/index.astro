@@ -7,7 +7,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 import mePhoto from '../assets/images/about/me.jpg';
 
-const allPosts = (await getCollection('posts')).sort(
+const allPosts = (await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft)).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 const recentPosts = allPosts.slice(0, 5);

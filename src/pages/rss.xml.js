@@ -3,7 +3,7 @@ import rss from '@astrojs/rss';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 export async function GET(context) {
-	const posts = await getCollection('posts');
+	const posts = await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
 	return rss({
 		title: SITE_TITLE,
 		description: SITE_DESCRIPTION,
@@ -13,5 +13,6 @@ export async function GET(context) {
 			link: `/post/${post.id}/`,
 		})),
 		stylesheet: '/rss/styles.xsl',
+		customData: '<language>de-de</language>',
 	});
 }

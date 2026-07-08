@@ -15,7 +15,20 @@ const posts = defineCollection({
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
 			tags: z.array(z.string()).optional(),
+			// Draft posts only build/render in `astro dev`; excluded from production builds.
+			draft: z.boolean().optional().default(false),
 		}),
 });
 
-export const collections = { posts };
+const pages = defineCollection({
+	// Standalone content pages that aren't blog posts (e.g. the colophon) —
+	// no pubDate/tags, so they never show up in the blog listing, tag/year
+	// pages, RSS feed, or Pagefind search.
+	loader: glob({ base: './src/content/pages', pattern: '**/*.{md,mdx}' }),
+	schema: z.object({
+		title: z.string(),
+		description: z.string(),
+	}),
+});
+
+export const collections = { posts, pages };

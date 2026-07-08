@@ -1,9 +1,6 @@
 ---
-title: 'Wie achis.blog läuft'
+title: 'Kolophon'
 description: 'Astro mit Node-Adapter, Caddy als Reverse Proxy und systemd auf einem eigenen Server — die komplette Konfiguration.'
-pubDate: 'Jul 08 2026'
-tags: ['server', 'astro', 'linux']
-heroImage: '../../assets/blog-placeholder-2.jpg'
 ---
 
 achis.blog läuft auf einem eigenen VPS. Kein Managed Hosting, kein Vercel, kein Netlify — stattdessen ein Server, ein Reverse Proxy und ein systemd-Service. Hier ist, wie das zusammenhängt.
