@@ -1,10 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
 import PostFilter from '../components/PostFilter.astro';
 import PostList from '../components/PostList.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE_TITLE } from '../consts';
 
 const posts = (await getCollection('posts')).sort(
@@ -13,20 +11,29 @@ const posts = (await getCollection('posts')).sort(
 
 const years = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
 const tags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
+
+const postsByYear = years.map((year) => ({
+	year,
+	posts: posts.filter((p) => p.data.pubDate.getFullYear() === year),
+}));
 ---
 
-<!doctype html>
-<html lang="de">
-	<head>
-		<BaseHead title={`Blog — ${SITE_TITLE}`} description="Alle Beiträge" />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>Blog</h1>
-			<PostFilter {years} {tags} />
-			<PostList posts={posts} />
-		</main>
-		<Footer />
-	</body>
-</html>
+<BaseLayout title={`Blog — ${SITE_TITLE}`} description="Alle Beiträge">
+	<h1>Blog</h1>
+	<PostFilter {years} {tags} yearHref={(year) => `#year-${year}`} />
+	{postsByYear.map(({ year, posts }) => (
+		<section>
+			<h2 id={`year-${year}`}>{year}</h2>
+			<PostList {posts} />
+		</section>
+	))}
+</BaseLayout>
+
+<style>
+	section {
+		margin-bottom: 2em;
+	}
+	h2 {
+		scroll-margin-top: 1em;
+	}
+</style>

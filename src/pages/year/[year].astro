@@ -1,10 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseHead from '../../components/BaseHead.astro';
-import Footer from '../../components/Footer.astro';
-import Header from '../../components/Header.astro';
 import PostFilter from '../../components/PostFilter.astro';
 import PostList from '../../components/PostList.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 import { SITE_TITLE } from '../../consts';
 
 export async function getStaticPaths() {
@@ -27,18 +25,8 @@ const years = [...new Set(allPosts.map((p) => p.data.pubDate.getFullYear()))].so
 const tags = [...new Set(allPosts.flatMap((p) => p.data.tags ?? []))].sort();
 ---
 
-<!doctype html>
-<html lang="de">
-	<head>
-		<BaseHead title={`${year} — ${SITE_TITLE}`} description={`Beiträge aus ${year}`} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>{year}</h1>
-			<PostFilter {years} {tags} activeYear={year} />
-			<PostList {posts} />
-		</main>
-		<Footer />
-	</body>
-</html>
+<BaseLayout title={`${year} — ${SITE_TITLE}`} description={`Beiträge aus ${year}`}>
+	<h1>{year}</h1>
+	<PostFilter {years} {tags} activeYear={year} />
+	<PostList {posts} />
+</BaseLayout>

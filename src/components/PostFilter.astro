@@ -4,9 +4,10 @@ interface Props {
 	tags: string[];
 	activeYear?: number;
 	activeTag?: string;
+	yearHref?: (year: number) => string;
 }
 
-const { years, tags, activeYear, activeTag } = Astro.props;
+const { years, tags, activeYear, activeTag, yearHref = (year: number) => `/year/${year}/` } = Astro.props;
 ---
 
 <div class="filters">
@@ -15,7 +16,7 @@ const { years, tags, activeYear, activeTag } = Astro.props;
 		<>
 			<div class="years">
 				{years.map((year) => (
-					<a href={`/year/${year}/`} class:list={[{ active: year === activeYear }]}>{year}</a>
+					<a href={yearHref(year)} class:list={[{ active: year === activeYear }]}>{year}</a>
 				))}
 			</div>
 			{tags.length > 0 && <hr />}
