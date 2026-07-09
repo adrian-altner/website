@@ -1,7 +1,19 @@
 ---
 import { getCollection } from 'astro:content';
 
-// Small title/description/tag index for the client-side fuzzy fallback (see below) —
+// Strips just enough Markdown syntax that a fuzzy-matched excerpt from the raw
+// body reads as plain text instead of showing stray #, *, [] characters.
+function stripMarkdown(md: string) {
+	return md
+		.replace(/```[\s\S]*?```/g, ' ')
+		.replace(/!\[.*?\]\(.*?\)/g, ' ')
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+		.replace(/[#>*_`~]/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+}
+
+// Title/description/tag/body index for the client-side fuzzy fallback (see below) —
 // Pagefind itself does no typo-tolerant matching, only stemming and prefix matching.
 const posts = await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
 const searchIndex = posts.map((post) => ({
@@ -9,6 +21,7 @@ const searchIndex = posts.map((post) => ({
 	url: `/post/${post.id}/`,
 	description: post.data.description,
 	tags: post.data.tags ?? [],
+	body: stripMarkdown(post.body ?? ''),
 }));
 ---
 
@@ -91,13 +104,52 @@ const searchIndex = posts.map((post) => ({
 				fusePromise = import('fuse.js').then(({ default: Fuse }) => {
 					const searchIndex = JSON.parse(indexDataEl?.textContent || '[]');
 					return new Fuse(searchIndex, {
-						keys: ['title', 'description', 'tags'],
-						threshold: 0.4,
+						keys: [
+							{ name: 'title', weight: 3 },
+							{ name: 'description', weight: 2 },
+							{ name: 'tags', weight: 2 },
+							{ name: 'body', weight: 1 },
+						],
+						threshold: 0.3,
+						minMatchCharLength: 3,
 						ignoreLocation: true,
+						includeMatches: true,
 					});
 				});
 			}
 			return fusePromise;
+		}
+
+		function escapeHtml(str) {
+			return str.replace(
+				/[&<>"']/g,
+				(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+			);
+		}
+
+		// Builds a Pagefind-style excerpt: a window of plain text around the matched
+		// range with the match itself wrapped in <mark>, rather than the raw field value.
+		function highlightSnippet(text, indices, padding = 40) {
+			if (!indices || indices.length === 0) return null;
+			const [start, end] = indices[0];
+			const from = Math.max(0, start - padding);
+			const to = Math.min(text.length, end + 1 + padding);
+			const prefix = from > 0 ? '…' : '';
+			const suffix = to < text.length ? '…' : '';
+			const before = escapeHtml(text.slice(from, start));
+			const match = escapeHtml(text.slice(start, end + 1));
+			const after = escapeHtml(text.slice(end + 1, to));
+			return `${prefix}${before}<mark>${match}</mark>${after}${suffix}`;
+		}
+
+		// Prefers a body match (most context) over a description match; a title/tag-only
+		// match gets no excerpt since there's nothing more to show beyond the title itself.
+		function buildExcerpt(item, fieldMatches) {
+			const bodyMatch = fieldMatches?.find((m) => m.key === 'body');
+			if (bodyMatch) return highlightSnippet(item.body, bodyMatch.indices);
+			const descMatch = fieldMatches?.find((m) => m.key === 'description');
+			if (descMatch) return highlightSnippet(item.description, descMatch.indices);
+			return null;
 		}
 
 		function setBackgroundInert(isInert) {
@@ -191,12 +243,19 @@ const searchIndex = posts.map((post) => ({
 			}
 			suggestionsListEl.innerHTML = '';
 			suggestionsEl.hidden = false;
-			for (const { item } of matches) {
+			for (const { item, matches: fieldMatches } of matches) {
 				const li = document.createElement('li');
 				const a = document.createElement('a');
 				a.href = item.url;
 				a.textContent = item.title;
 				li.appendChild(a);
+				const excerptHtml = buildExcerpt(item, fieldMatches);
+				if (excerptHtml) {
+					const p = document.createElement('p');
+					p.className = 'excerpt';
+					p.innerHTML = excerptHtml;
+					li.appendChild(p);
+				}
 				suggestionsListEl.appendChild(li);
 			}
 		}
@@ -435,5 +494,16 @@ const searchIndex = posts.map((post) => ({
 	}
 	#search-suggestions-list :global(a:hover) {
 		color: var(--accent);
+	}
+	#search-suggestions-list :global(.excerpt) {
+		color: var(--muted);
+		font-size: 0.9em;
+		font-style: normal;
+		margin: 0.2em 0 0;
+	}
+	#search-suggestions-list :global(mark) {
+		background: var(--accent);
+		color: var(--bg);
+		border-radius: 2px;
 	}
 </style>
