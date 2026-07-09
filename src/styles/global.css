@@ -3,7 +3,7 @@
 	--accent-hover: #2a4419;
 	--bg: #e5e5e0;
 	--text: #2a2a2a;
-	--muted: #666660;
+	--muted: #565650;
 	--border: #c8c8c2;
 }
 
@@ -16,6 +16,9 @@ html {
 }
 
 body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
 	font-family: var(--font-mono), ui-monospace, monospace;
 	margin: 0;
 	padding: 0;
@@ -32,6 +35,7 @@ main {
 	max-width: calc(100% - 2em);
 	margin: 0 auto;
 	padding: 2em 1em 4em;
+	flex: 1 0 auto;
 }
 
 h1, h2, h3, h4, h5, h6 {

@@ -4,6 +4,7 @@
 <footer>
 	<div class="footer-inner">
 		<a href="/colophon">Kolophon</a>
+		<a href="/rss.xml">RSS-Feed</a>
 	</div>
 </footer>
 
@@ -13,6 +14,11 @@
 		max-width: calc(100% - 2em);
 		margin: 0 auto;
 		padding: 0 1em 2em;
+	}
+	.footer-inner {
+		display: flex;
+		gap: 1em;
+		flex-wrap: wrap;
 	}
 	.footer-inner a {
 		color: var(--muted);

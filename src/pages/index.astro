@@ -1,63 +1,36 @@
 ---
-import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
-import PostFilter from '../components/PostFilter.astro';
 import PostList from '../components/PostList.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
-import mePhoto from '../assets/images/about/me.jpg';
+import { SITE_TITLE } from '../consts';
 
-const allPosts = (await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft)).sort(
+const posts = (await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft)).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
-const recentPosts = allPosts.slice(0, 5);
-const years = [...new Set(allPosts.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
-const tags = [...new Set(allPosts.flatMap((p) => p.data.tags ?? []))].sort();
+
+const years = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
+
+const postsByYear = years.map((year) => ({
+	year,
+	posts: posts.filter((p) => p.data.pubDate.getFullYear() === year),
+}));
 ---
 
-<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
-	<div class="intro">
-		<Image src={mePhoto} alt="Foto von Achi" class="avatar" width={80} height={80} loading="eager" />
-		<p>
-			Hallo, ich bin Achi. Hier schreibe ich über Dinge, die mich interessieren —
-			Technik, Server, Software und alles dazwischen.
-		</p>
-	</div>
-
-	{recentPosts.length > 0 && (
+<BaseLayout title={SITE_TITLE} description="Alle Beiträge">
+	<h1 class="sr-only">{SITE_TITLE}</h1>
+	{postsByYear.map(({ year, posts }) => (
 		<section>
-			<h2>Letzte Beiträge</h2>
-			<PostList posts={recentPosts} />
-			<p><a href="/blog">Alle Beiträge →</a></p>
-			<PostFilter years={[]} {tags} />
+			<h2 id={`year-${year}`}>{year}</h2>
+			<PostList {posts} />
 		</section>
-	)}
+	))}
 </BaseLayout>
 
 <style>
-	.intro {
-		display: flex;
-		align-items: flex-start;
-		gap: 1em;
-		margin-top: 2em;
-		margin-bottom: 3em;
+	section {
+		margin-bottom: 2em;
 	}
-	.avatar {
-		width: 80px;
-		height: 80px;
-		border-radius: 50%;
-		object-fit: cover;
-		flex-shrink: 0;
-	}
-	.intro p {
-		margin: 0;
-	}
-	ul {
-		list-style: none;
-		padding: 0;
-		margin: 0 0 1em;
-	}
-	section > p {
-		margin-top: 2em;
+	h2 {
+		scroll-margin-top: 1em;
 	}
 </style>

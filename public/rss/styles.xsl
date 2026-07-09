@@ -42,13 +42,39 @@
 						margin: 0 0 0.5em;
 					}
 					.feed-url {
+						display: flex;
+						align-items: center;
+						flex-wrap: wrap;
+						gap: 0.5em;
 						font-size: 0.85em;
 						color: var(--muted);
-						word-break: break-all;
 						margin: 0 0 1.5em;
+					}
+					.feed-url code {
+						word-break: break-all;
 					}
 					.feed-url a {
 						color: var(--accent);
+					}
+					.copy-btn {
+						flex-shrink: 0;
+						font: inherit;
+						font-size: 0.85em;
+						padding: 0.2em 0.7em;
+						border: 1px solid var(--border);
+						border-radius: 4px;
+						background: var(--bg);
+						color: var(--accent);
+						cursor: pointer;
+					}
+					.copy-btn:hover {
+						color: var(--accent-hover);
+						border-color: var(--accent-hover);
+					}
+					.feed-note {
+						color: var(--muted);
+						font-size: 0.85em;
+						margin: 0 0 1.5em;
 					}
 					hr {
 						border: none;
@@ -92,8 +118,12 @@
 					<h1><xsl:value-of select="title" /></h1>
 					<p class="lede"><xsl:value-of select="description" /></p>
 					<p class="feed-url">
-						Dies ist der RSS-Feed von <a href="{link}"><xsl:value-of select="link" /></a> —
-						mit einem Feedreader abonnieren.
+						<code id="feed-url"></code>
+						<button type="button" id="copy-feed-url" class="copy-btn">Kopieren</button>
+					</p>
+					<p class="feed-note">
+						Mit einem Feedreader abonnieren, um neue Beiträge von
+						<a href="{link}"><xsl:value-of select="link" /></a> zu erhalten.
 					</p>
 					<hr />
 					<ul>
@@ -106,6 +136,39 @@
 						</xsl:for-each>
 					</ul>
 				</main>
+				<script><![CDATA[
+					var urlEl = document.getElementById('feed-url');
+					var btn = document.getElementById('copy-feed-url');
+					if (urlEl) urlEl.textContent = window.location.href;
+					if (btn) {
+						var originalLabel = btn.textContent;
+						var resetTimer;
+						btn.addEventListener('click', function () {
+							var url = window.location.href;
+							function done() {
+								clearTimeout(resetTimer);
+								btn.textContent = 'Kopiert!';
+								resetTimer = setTimeout(function () {
+									btn.textContent = originalLabel;
+								}, 1500);
+							}
+							function fallbackCopy() {
+								var input = document.createElement('input');
+								input.value = url;
+								document.body.appendChild(input);
+								input.select();
+								document.execCommand('copy');
+								document.body.removeChild(input);
+								done();
+							}
+							if (navigator.clipboard && navigator.clipboard.writeText) {
+								navigator.clipboard.writeText(url).then(done).catch(fallbackCopy);
+							} else {
+								fallbackCopy();
+							}
+						});
+					}
+				]]></script>
 			</body>
 		</html>
 	</xsl:template>

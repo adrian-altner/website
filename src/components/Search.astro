@@ -1,0 +1,408 @@
+---
+import { getCollection } from 'astro:content';
+
+// Small title/tag index for the client-side fuzzy fallback (see below) — Pagefind
+// itself does no typo-tolerant matching, only stemming and prefix matching.
+const posts = await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
+const searchIndex = posts.map((post) => ({
+	title: post.data.title,
+	url: `/post/${post.id}/`,
+	tags: post.data.tags ?? [],
+}));
+---
+
+<div id="search-backdrop" hidden></div>
+<div class="search">
+	<label for="search-input" class="sr-only">Suche</label>
+	<input id="search-input" type="search" placeholder="Suchen…" autocomplete="off" />
+	<button type="button" id="search-clear" aria-label="Suche leeren" hidden>×</button>
+	<div id="search-panel" hidden>
+		<div id="search-filters" hidden></div>
+		<p id="search-status"></p>
+		<ul id="search-results"></ul>
+		<ul id="search-suggestions" hidden></ul>
+	</div>
+</div>
+<script type="application/json" id="search-index-data" is:inline set:html={JSON.stringify(searchIndex)} />
+
+<script>
+	const container = document.querySelector('.search');
+	const input = document.getElementById('search-input');
+	const clearBtn = document.getElementById('search-clear');
+	const panel = document.getElementById('search-panel');
+	const backdrop = document.getElementById('search-backdrop');
+	const filtersEl = document.getElementById('search-filters');
+	const statusEl = document.getElementById('search-status');
+	const resultsEl = document.getElementById('search-results');
+	const suggestionsEl = document.getElementById('search-suggestions');
+	const indexDataEl = document.getElementById('search-index-data');
+
+	if (
+		container &&
+		input &&
+		clearBtn &&
+		panel &&
+		backdrop &&
+		filtersEl &&
+		statusEl &&
+		resultsEl &&
+		suggestionsEl
+	) {
+		let pagefind;
+		let pagefindPromise = null;
+		let allTagCounts = {};
+		let currentQuery = '';
+		let activeTag = null;
+		let requestToken = 0;
+		let debounceTimer;
+		let fusePromise = null;
+
+		function loadPagefind() {
+			if (!pagefindPromise) {
+				// Runs only after `npm run build` generates this into dist/client/pagefind/ — indirect
+				// `Function` call keeps Vite's bundler from statically analyzing/rewriting the import,
+				// which otherwise breaks with a ReferenceError on the unresolved `__VITE_PRELOAD__` token.
+				const importPagefind = new Function('url', 'return import(url)');
+				pagefindPromise = importPagefind('/pagefind/pagefind.js')
+					.then(async (mod) => {
+						pagefind = mod;
+						// Also used to pre-populate the tag chips on focus, before any query is typed.
+						const filters = await mod.filters().catch(() => ({}));
+						allTagCounts = filters.tag ?? {};
+					})
+					.catch(() => {
+						statusEl.textContent =
+							'Suche erfordert einen Production-Build (npm run build) — im Dev-Server nicht verfügbar.';
+					});
+			}
+			return pagefindPromise;
+		}
+
+		// Only loaded on the rare zero-result path, so it never adds weight to the
+		// normal search flow — Pagefind alone handles everything else.
+		function loadFuse() {
+			if (!fusePromise) {
+				fusePromise = import('fuse.js').then(({ default: Fuse }) => {
+					const searchIndex = JSON.parse(indexDataEl?.textContent || '[]');
+					return new Fuse(searchIndex, { keys: ['title', 'tags'], threshold: 0.4 });
+				});
+			}
+			return fusePromise;
+		}
+
+		function setBackgroundInert(isInert) {
+			document.querySelectorAll('.site-title, header nav, main, footer').forEach((el) => {
+				if (isInert) el.setAttribute('inert', '');
+				else el.removeAttribute('inert');
+			});
+		}
+
+		function showPanel() {
+			panel.hidden = false;
+		}
+
+		function hidePanel() {
+			panel.hidden = true;
+			hideDim();
+		}
+
+		// Dimming (and trapping focus to the search widget) is reserved for once
+		// there's actually something active to search — a bare focus only previews
+		// the tag chips and shouldn't darken the whole page or block tabbing away.
+		function showDim() {
+			backdrop.hidden = false;
+			setBackgroundInert(true);
+		}
+
+		function hideDim() {
+			backdrop.hidden = true;
+			setBackgroundInert(false);
+		}
+
+		function renderChips(tagCounts) {
+			filtersEl.innerHTML = '';
+			const entries = Object.entries(tagCounts);
+			if (entries.length === 0) {
+				filtersEl.hidden = true;
+				return;
+			}
+			filtersEl.hidden = false;
+			for (const [value, count] of entries) {
+				const chip = document.createElement('button');
+				chip.type = 'button';
+				chip.className = 'chip';
+				if (value === activeTag) chip.classList.add('active');
+				chip.textContent = `#${value} (${count})`;
+				chip.addEventListener('click', () => {
+					activeTag = activeTag === value ? null : value;
+					runSearch();
+				});
+				filtersEl.appendChild(chip);
+			}
+		}
+
+		function renderResults(results) {
+			resultsEl.innerHTML = '';
+			if (results.length === 0) {
+				statusEl.textContent = 'Keine Ergebnisse.';
+				return;
+			}
+			statusEl.textContent = '';
+			for (const result of results) {
+				const li = document.createElement('li');
+				const a = document.createElement('a');
+				a.href = result.url;
+				a.textContent = result.meta?.title ?? result.url;
+				const p = document.createElement('p');
+				p.className = 'excerpt';
+				p.innerHTML = result.excerpt;
+				li.append(a, p);
+				resultsEl.appendChild(li);
+			}
+		}
+
+		function clearSuggestions() {
+			suggestionsEl.innerHTML = '';
+			suggestionsEl.hidden = true;
+		}
+
+		async function renderSuggestions(query) {
+			const fuse = await loadFuse();
+			const matches = fuse.search(query).slice(0, 5);
+			if (matches.length === 0) return;
+			statusEl.textContent = 'Keine exakten Treffer — meintest du:';
+			suggestionsEl.innerHTML = '';
+			suggestionsEl.hidden = false;
+			for (const { item } of matches) {
+				const li = document.createElement('li');
+				const a = document.createElement('a');
+				a.href = item.url;
+				a.textContent = item.title;
+				li.appendChild(a);
+				suggestionsEl.appendChild(li);
+			}
+		}
+
+		async function runSearch() {
+			if (!currentQuery && !activeTag) {
+				// pagefind is already loaded by this point — a chip can only exist (and be
+				// clickable) once loadPagefind() has resolved and populated allTagCounts —
+				// so this path stays fully synchronous, with no await-induced timing gap.
+				resultsEl.innerHTML = '';
+				statusEl.textContent = '';
+				clearSuggestions();
+				renderChips(allTagCounts);
+				showPanel();
+				hideDim();
+				return;
+			}
+			await loadPagefind();
+			if (!pagefind) return;
+			showPanel();
+			showDim();
+			clearSuggestions();
+			const token = ++requestToken;
+			statusEl.textContent = 'Suche…';
+			const search = await pagefind.search(
+				currentQuery || null,
+				activeTag ? { filters: { tag: activeTag } } : undefined,
+			);
+			if (token !== requestToken) return;
+			const results = await Promise.all(search.results.slice(0, 20).map((r) => r.data()));
+			if (token !== requestToken) return;
+			renderChips(search.filters?.tag ?? {});
+			renderResults(results);
+			if (results.length === 0 && currentQuery) {
+				renderSuggestions(currentQuery);
+			}
+		}
+
+		input.addEventListener('focus', async () => {
+			await loadPagefind();
+			if (!currentQuery && !activeTag) {
+				renderChips(allTagCounts);
+				showPanel();
+			} else {
+				showPanel();
+				showDim();
+			}
+		});
+
+		// Capture phase: runs top-down, before the click reaches its target — so it
+		// evaluates containment before a chip's own click handler can synchronously
+		// replace itself (e.g. via renderChips), which would otherwise detach the
+		// event target from the DOM first and make this check false-positive.
+		document.addEventListener(
+			'click',
+			(event) => {
+				if (!container.contains(event.target)) hidePanel();
+			},
+			true,
+		);
+
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape' && !panel.hidden) {
+				hidePanel();
+				input.blur();
+			}
+		});
+
+		input.addEventListener('input', () => {
+			clearBtn.hidden = !input.value;
+			clearTimeout(debounceTimer);
+			currentQuery = input.value.trim();
+			debounceTimer = setTimeout(runSearch, 180);
+		});
+
+		clearBtn.addEventListener('click', () => {
+			input.value = '';
+			clearBtn.hidden = true;
+			currentQuery = '';
+			runSearch();
+			input.focus();
+		});
+	}
+</script>
+
+<style>
+	#search-backdrop {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		z-index: 9;
+	}
+	.search {
+		position: relative;
+		z-index: 10;
+		margin-top: 1em;
+	}
+	#search-input {
+		width: 100%;
+		padding: 0.5em 2em 0.5em 0.7em;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: var(--bg);
+		color: var(--text);
+		font: inherit;
+		font-size: 1em;
+	}
+	#search-input:focus {
+		outline: none;
+		box-shadow: inset 0 -2px 0 0 var(--accent);
+	}
+	#search-input::-webkit-search-cancel-button {
+		display: none;
+	}
+	#search-clear {
+		position: absolute;
+		top: 0;
+		right: 0.2em;
+		height: 100%;
+		padding: 0 0.5em;
+		border: none;
+		background: none;
+		color: var(--muted);
+		font-size: 1.3em;
+		line-height: 1;
+		cursor: pointer;
+	}
+	#search-clear:hover {
+		color: var(--accent);
+	}
+	.search:has(#search-panel:not([hidden])) #search-input {
+		border-radius: 4px 4px 0 0;
+	}
+	#search-panel {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		padding: 0.8em;
+		border: 1px solid var(--border);
+		border-top: none;
+		border-radius: 0 0 4px 4px;
+		background: var(--bg);
+		font-family: var(--font-mono), ui-monospace, monospace;
+		z-index: 10;
+	}
+	#search-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5em;
+	}
+	#search-filters :global(.chip) {
+		font: inherit;
+		font-size: 0.85em;
+		color: var(--muted);
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		padding: 0.2em 0.7em;
+		cursor: pointer;
+	}
+	#search-filters :global(.chip:hover) {
+		color: var(--accent);
+	}
+	#search-filters :global(.chip.active) {
+		color: var(--bg);
+		background: var(--accent);
+		border-color: var(--accent);
+		font-weight: bold;
+	}
+	#search-status {
+		color: var(--muted);
+		font-size: 0.9em;
+		margin: 0.8em 0 0;
+	}
+	#search-status:first-child {
+		margin-top: 0;
+	}
+	#search-results {
+		list-style: none;
+		padding: 0;
+		margin: 0.8em 0 0;
+		max-height: 50vh;
+		overflow-y: auto;
+	}
+	#search-results:first-child {
+		margin-top: 0;
+	}
+	#search-results :global(li) {
+		padding: 0.6em 0;
+		border-top: 1px solid var(--border);
+	}
+	#search-results :global(li:first-child) {
+		border-top: none;
+	}
+	#search-results :global(a) {
+		font-weight: bold;
+	}
+	#search-results :global(.excerpt) {
+		color: var(--muted);
+		font-size: 0.9em;
+		margin: 0.2em 0 0;
+	}
+	#search-results :global(mark) {
+		background: var(--accent);
+		color: var(--bg);
+		border-radius: 2px;
+	}
+	#search-suggestions {
+		list-style: none;
+		padding: 0;
+		margin: 0.8em 0 0;
+	}
+	#search-suggestions:first-child {
+		margin-top: 0;
+	}
+	#search-suggestions :global(li) {
+		padding: 0.3em 0;
+	}
+	#search-suggestions :global(a) {
+		font-style: italic;
+		color: var(--muted);
+	}
+	#search-suggestions :global(a:hover) {
+		color: var(--accent);
+	}
+</style>
