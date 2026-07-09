@@ -1,12 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
 
-// Small title/tag index for the client-side fuzzy fallback (see below) — Pagefind
-// itself does no typo-tolerant matching, only stemming and prefix matching.
+// Small title/description/tag index for the client-side fuzzy fallback (see below) —
+// Pagefind itself does no typo-tolerant matching, only stemming and prefix matching.
 const posts = await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
 const searchIndex = posts.map((post) => ({
 	title: post.data.title,
 	url: `/post/${post.id}/`,
+	description: post.data.description,
 	tags: post.data.tags ?? [],
 }));
 ---
@@ -20,7 +21,10 @@ const searchIndex = posts.map((post) => ({
 		<div id="search-filters" hidden></div>
 		<p id="search-status"></p>
 		<ul id="search-results"></ul>
-		<ul id="search-suggestions" hidden></ul>
+		<div id="search-suggestions" hidden>
+			<p class="suggestions-label">Meintest du:</p>
+			<ul id="search-suggestions-list"></ul>
+		</div>
 	</div>
 </div>
 <script type="application/json" id="search-index-data" is:inline set:html={JSON.stringify(searchIndex)} />
@@ -35,6 +39,7 @@ const searchIndex = posts.map((post) => ({
 	const statusEl = document.getElementById('search-status');
 	const resultsEl = document.getElementById('search-results');
 	const suggestionsEl = document.getElementById('search-suggestions');
+	const suggestionsListEl = document.getElementById('search-suggestions-list');
 	const indexDataEl = document.getElementById('search-index-data');
 
 	if (
@@ -46,7 +51,8 @@ const searchIndex = posts.map((post) => ({
 		filtersEl &&
 		statusEl &&
 		resultsEl &&
-		suggestionsEl
+		suggestionsEl &&
+		suggestionsListEl
 	) {
 		let pagefind;
 		let pagefindPromise = null;
@@ -84,7 +90,11 @@ const searchIndex = posts.map((post) => ({
 			if (!fusePromise) {
 				fusePromise = import('fuse.js').then(({ default: Fuse }) => {
 					const searchIndex = JSON.parse(indexDataEl?.textContent || '[]');
-					return new Fuse(searchIndex, { keys: ['title', 'tags'], threshold: 0.4 });
+					return new Fuse(searchIndex, {
+						keys: ['title', 'description', 'tags'],
+						threshold: 0.4,
+						ignoreLocation: true,
+					});
 				});
 			}
 			return fusePromise;
@@ -141,13 +151,13 @@ const searchIndex = posts.map((post) => ({
 			}
 		}
 
-		function renderResults(results) {
+		function renderResults(results, total) {
 			resultsEl.innerHTML = '';
 			if (results.length === 0) {
 				statusEl.textContent = 'Keine Ergebnisse.';
 				return;
 			}
-			statusEl.textContent = '';
+			statusEl.textContent = total === 1 ? '1 Treffer' : `${total} Treffer`;
 			for (const result of results) {
 				const li = document.createElement('li');
 				const a = document.createElement('a');
@@ -162,16 +172,24 @@ const searchIndex = posts.map((post) => ({
 		}
 
 		function clearSuggestions() {
-			suggestionsEl.innerHTML = '';
+			suggestionsListEl.innerHTML = '';
 			suggestionsEl.hidden = true;
 		}
 
-		async function renderSuggestions(query) {
+		// Runs alongside real results too, not just when there are none — Pagefind's
+		// prefix matching often already finds something for a typo, but the fuzzy
+		// index (title/description/tags) can still surface a closer match it missed.
+		async function renderSuggestions(query, shownUrls) {
 			const fuse = await loadFuse();
-			const matches = fuse.search(query).slice(0, 5);
-			if (matches.length === 0) return;
-			statusEl.textContent = 'Keine exakten Treffer — meintest du:';
-			suggestionsEl.innerHTML = '';
+			const matches = fuse
+				.search(query)
+				.filter(({ item }) => !shownUrls.includes(item.url))
+				.slice(0, 5);
+			if (matches.length === 0) {
+				clearSuggestions();
+				return;
+			}
+			suggestionsListEl.innerHTML = '';
 			suggestionsEl.hidden = false;
 			for (const { item } of matches) {
 				const li = document.createElement('li');
@@ -179,7 +197,7 @@ const searchIndex = posts.map((post) => ({
 				a.href = item.url;
 				a.textContent = item.title;
 				li.appendChild(a);
-				suggestionsEl.appendChild(li);
+				suggestionsListEl.appendChild(li);
 			}
 		}
 
@@ -211,9 +229,14 @@ const searchIndex = posts.map((post) => ({
 			const results = await Promise.all(search.results.slice(0, 20).map((r) => r.data()));
 			if (token !== requestToken) return;
 			renderChips(search.filters?.tag ?? {});
-			renderResults(results);
-			if (results.length === 0 && currentQuery) {
-				renderSuggestions(currentQuery);
+			renderResults(results, search.results.length);
+			if (currentQuery) {
+				renderSuggestions(
+					currentQuery,
+					results.map((r) => r.url),
+				);
+			} else {
+				clearSuggestions();
 			}
 		}
 
@@ -388,21 +411,29 @@ const searchIndex = posts.map((post) => ({
 		border-radius: 2px;
 	}
 	#search-suggestions {
-		list-style: none;
-		padding: 0;
 		margin: 0.8em 0 0;
 	}
 	#search-suggestions:first-child {
 		margin-top: 0;
 	}
-	#search-suggestions :global(li) {
+	.suggestions-label {
+		color: var(--muted);
+		font-size: 0.9em;
+		margin: 0 0 0.3em;
+	}
+	#search-suggestions-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	#search-suggestions-list :global(li) {
 		padding: 0.3em 0;
 	}
-	#search-suggestions :global(a) {
+	#search-suggestions-list :global(a) {
 		font-style: italic;
 		color: var(--muted);
 	}
-	#search-suggestions :global(a:hover) {
+	#search-suggestions-list :global(a:hover) {
 		color: var(--accent);
 	}
 </style>
