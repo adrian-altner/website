@@ -38,6 +38,7 @@ const t = useTranslations(lang);
 		const isHome = link.hasAttribute('data-home');
 		if (href === path || (!isHome && path.startsWith(href))) {
 			link.classList.add('active');
+			link.setAttribute('aria-current', 'page');
 		}
 	});
 </script>
@@ -103,8 +104,5 @@ const t = useTranslations(lang);
 	.lang-current {
 		font-weight: bold;
 		color: var(--text);
-	}
-	hr {
-		margin-top: 1.2em;
 	}
 </style>

@@ -63,17 +63,29 @@ The blockquote element represents content that is quoted from another source, op
 
 ### Blockquote with attribution
 
+HTML5 recommends wrapping an attributed quote in a `figure`, with the citation in a sibling `figcaption` — not as extra text inside the `blockquote` itself.
+
 #### Syntax
 
 ```markdown
-> Don't communicate by sharing memory, share memory by communicating.<br>
-> — <cite>Rob Pike[^1]</cite>
+<figure>
+
+> Don't communicate by sharing memory, share memory by communicating.[^1]
+
+<figcaption>— <cite>Rob Pike</cite></figcaption>
+
+</figure>
 ```
 
 #### Output
 
-> Don't communicate by sharing memory, share memory by communicating.<br>
-> — <cite>Rob Pike[^1]</cite>
+<figure>
+
+> Don't communicate by sharing memory, share memory by communicating.[^1]
+
+<figcaption>— <cite>Rob Pike</cite></figcaption>
+
+</figure>
 
 [^1]: The above quote is excerpted from Rob Pike's [talk](https://www.youtube.com/watch?v=PAAkCSZUG1c) during Gopherfest, November 18, 2015.
 

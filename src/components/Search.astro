@@ -47,7 +47,7 @@ const searchIndex = posts.map((post) => ({
 	<button type="button" id="search-clear" aria-label={t('search.clear')} hidden>×</button>
 	<div id="search-panel" hidden>
 		<div id="search-filters" hidden></div>
-		<p id="search-status"></p>
+		<p id="search-status" aria-live="polite"></p>
 		<ul id="search-results"></ul>
 		<div id="search-suggestions" hidden>
 			<p class="suggestions-label">{t('search.suggestions')}</p>
@@ -210,7 +210,9 @@ const searchIndex = posts.map((post) => ({
 				const chip = document.createElement('button');
 				chip.type = 'button';
 				chip.className = 'chip';
-				if (value === activeTag) chip.classList.add('active');
+				const isActive = value === activeTag;
+				if (isActive) chip.classList.add('active');
+				chip.setAttribute('aria-pressed', String(isActive));
 				chip.textContent = `#${value} (${count})`;
 				chip.addEventListener('click', () => {
 					activeTag = activeTag === value ? null : value;
