@@ -318,10 +318,12 @@ const searchIndex = posts.map((post) => ({
 		}
 
 		input.addEventListener('focus', async () => {
-			await loadPagefind();
 			if (!currentQuery && !activeTag) {
-				renderChips(allTagCounts);
+				// Open right away so focus gets instant feedback — the chips themselves
+				// still depend on pagefind's index and pop in once that resolves.
 				showPanel();
+				await loadPagefind();
+				if (!currentQuery && !activeTag) renderChips(allTagCounts);
 			} else {
 				showPanel();
 				showDim();
@@ -361,6 +363,14 @@ const searchIndex = posts.map((post) => ({
 			runSearch();
 			input.focus();
 		});
+
+		// Warm the pagefind index up during idle time so it's already loaded by
+		// the time someone actually focuses the search box.
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(() => loadPagefind());
+		} else {
+			setTimeout(() => loadPagefind(), 200);
+		}
 	}
 </script>
 
