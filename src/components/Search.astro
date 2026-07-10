@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { defaultLang } from '../i18n/ui';
-import { postUrl, useTranslations } from '../i18n/utils';
+import { postUrl, tagUrl, useTranslations } from '../i18n/utils';
 
 // Strips just enough Markdown syntax that a fuzzy-matched excerpt from the raw
 // body reads as plain text instead of showing stray #, *, [] characters.
@@ -13,6 +13,12 @@ function stripMarkdown(md: string) {
 		.replace(/[#>*_`~]/g, ' ')
 		.replace(/\s+/g, ' ')
 		.trim();
+}
+
+// Matches FormattedDate's `iso` mode so tag-only browsing (rendered from this
+// index, see below) shows the same date format as the normal post list.
+function formatIsoDate(date: Date) {
+	return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 const lang = Astro.currentLocale ?? defaultLang;
@@ -36,6 +42,9 @@ const searchIndex = posts.map((post) => ({
 	url: postUrl(post.data.lang, post.id),
 	description: post.data.description,
 	tags: post.data.tags ?? [],
+	tagLinks: (post.data.tags ?? []).map((tag) => ({ tag, url: tagUrl(post.data.lang, tag) })),
+	pubDate: post.data.pubDate.valueOf(),
+	pubDateDisplay: formatIsoDate(post.data.pubDate),
 	body: stripMarkdown(post.body ?? ''),
 }));
 ---
@@ -44,7 +53,10 @@ const searchIndex = posts.map((post) => ({
 <div class="search">
 	<label for="search-input" class="sr-only">{t('search.label')}</label>
 	<input id="search-input" type="search" placeholder={t('search.placeholder')} autocomplete="off" />
-	<button type="button" id="search-clear" aria-label={t('search.clear')} hidden>×</button>
+	<button type="button" id="search-clear" aria-label={t('search.close')} hidden>×</button>
+	<div id="active-tag-bar" hidden>
+		<button type="button" id="active-tag-chip"></button>
+	</div>
 	<div id="search-panel" hidden>
 		<div id="search-filters" hidden></div>
 		<p id="search-status" aria-live="polite"></p>
@@ -65,6 +77,8 @@ const searchIndex = posts.map((post) => ({
 	const panel = document.getElementById('search-panel');
 	const backdrop = document.getElementById('search-backdrop');
 	const filtersEl = document.getElementById('search-filters');
+	const activeTagBar = document.getElementById('active-tag-bar');
+	const activeTagChip = document.getElementById('active-tag-chip');
 	const statusEl = document.getElementById('search-status');
 	const resultsEl = document.getElementById('search-results');
 	const suggestionsEl = document.getElementById('search-suggestions');
@@ -72,6 +86,7 @@ const searchIndex = posts.map((post) => ({
 	const indexDataEl = document.getElementById('search-index-data');
 	const messagesDataEl = document.getElementById('search-messages-data');
 	const messages = JSON.parse(messagesDataEl?.textContent || '{}');
+	const searchIndex = JSON.parse(indexDataEl?.textContent || '[]');
 
 	if (
 		container &&
@@ -80,6 +95,8 @@ const searchIndex = posts.map((post) => ({
 		panel &&
 		backdrop &&
 		filtersEl &&
+		activeTagBar &&
+		activeTagChip &&
 		statusEl &&
 		resultsEl &&
 		suggestionsEl &&
@@ -119,7 +136,6 @@ const searchIndex = posts.map((post) => ({
 		function loadFuse() {
 			if (!fusePromise) {
 				fusePromise = import('fuse.js').then(({ default: Fuse }) => {
-					const searchIndex = JSON.parse(indexDataEl?.textContent || '[]');
 					return new Fuse(searchIndex, {
 						keys: [
 							{ name: 'title', weight: 3 },
@@ -178,11 +194,30 @@ const searchIndex = posts.map((post) => ({
 
 		function showPanel() {
 			panel.hidden = false;
+			// Doubles as the close button while the panel is open — saves the extra
+			// row a separate "Schließen" button would need.
+			clearBtn.hidden = false;
+			updateActiveTagIndicator();
 		}
 
+		// Closing the search box ends the session entirely, rather than leaving the
+		// tag filter silently active in the background — otherwise the page looks
+		// like a plain, unfiltered view while a filter is still armed for next time,
+		// with nothing on screen (query text, results, page content) explaining why.
 		function hidePanel() {
 			panel.hidden = true;
 			hideDim();
+			input.value = '';
+			clearBtn.hidden = true;
+			currentQuery = '';
+			activeTag = null;
+			resultsEl.innerHTML = '';
+			statusEl.textContent = '';
+			filtersEl.innerHTML = '';
+			filtersEl.hidden = true;
+			clearSuggestions();
+			updateActiveTagIndicator();
+			updateUrl();
 		}
 
 		// Dimming (and trapping focus to the search widget) is reserved for once
@@ -198,9 +233,23 @@ const searchIndex = posts.map((post) => ({
 			setBackgroundInert(false);
 		}
 
+		// Shows the tag indicator only while the panel is closed — with the panel
+		// open, the same tag is already shown as the active chip in the filter
+		// list, so showing both at once is just duplicate UI.
+		function updateActiveTagIndicator() {
+			if (activeTag && panel.hidden) {
+				activeTagBar.hidden = false;
+				activeTagChip.textContent = `#${activeTag} ×`;
+			} else {
+				activeTagBar.hidden = true;
+			}
+		}
+
 		function renderChips(tagCounts) {
 			filtersEl.innerHTML = '';
-			const entries = Object.entries(tagCounts);
+			// Sorted alphabetically rather than left in Pagefind's count-derived order,
+			// so a chip doesn't jump position while the user is still typing.
+			const entries = Object.entries(tagCounts).sort((a, b) => a[0].localeCompare(b[0]));
 			if (entries.length === 0) {
 				filtersEl.hidden = true;
 				return;
@@ -216,6 +265,7 @@ const searchIndex = posts.map((post) => ({
 				chip.textContent = `#${value} (${count})`;
 				chip.addEventListener('click', () => {
 					activeTag = activeTag === value ? null : value;
+					updateActiveTagIndicator();
 					runSearch();
 				});
 				filtersEl.appendChild(chip);
@@ -239,6 +289,49 @@ const searchIndex = posts.map((post) => ({
 				p.className = 'excerpt';
 				p.innerHTML = result.excerpt;
 				li.append(a, p);
+				resultsEl.appendChild(li);
+			}
+		}
+
+		// Pure tag browsing (no text typed) has no match to excerpt or highlight, so
+		// it renders like the normal post list — title, description, tag links, date —
+		// instead of Pagefind's search-excerpt style used for actual text queries.
+		function renderPostListResults(posts) {
+			resultsEl.innerHTML = '';
+			if (posts.length === 0) {
+				statusEl.textContent = messages.noResults;
+				return;
+			}
+			statusEl.textContent =
+				posts.length === 1 ? messages.resultOne : messages.resultsTemplate.replace('{n}', String(posts.length));
+			for (const post of posts) {
+				const li = document.createElement('li');
+				const meta = document.createElement('div');
+				meta.className = 'post-meta';
+				const a = document.createElement('a');
+				a.className = 'post-title';
+				a.href = post.url;
+				a.textContent = post.title;
+				const desc = document.createElement('p');
+				desc.className = 'post-desc';
+				desc.textContent = post.description;
+				meta.append(a, desc);
+				if (post.tagLinks.length > 0) {
+					const tagsDiv = document.createElement('div');
+					tagsDiv.className = 'tags';
+					for (const { tag, url } of post.tagLinks) {
+						const tagA = document.createElement('a');
+						tagA.className = 'tag';
+						tagA.href = url;
+						tagA.textContent = `#${tag}`;
+						tagsDiv.appendChild(tagA);
+					}
+					meta.appendChild(tagsDiv);
+				}
+				const date = document.createElement('span');
+				date.className = 'date';
+				date.textContent = post.pubDateDisplay;
+				li.append(meta, date);
 				resultsEl.appendChild(li);
 			}
 		}
@@ -280,7 +373,24 @@ const searchIndex = posts.map((post) => ({
 			}
 		}
 
+		// Mirrors query + tag into the URL via replaceState (never pushState) so a
+		// reload or shared link restores the same search, without spamming history
+		// on every keystroke.
+		function updateUrl() {
+			const params = new URLSearchParams();
+			if (currentQuery) params.set('q', currentQuery);
+			if (activeTag) params.set('tag', activeTag);
+			const qs = params.toString();
+			const newUrl = location.pathname + (qs ? `?${qs}` : '') + location.hash;
+			history.replaceState(null, '', newUrl);
+		}
+
 		async function runSearch() {
+			updateUrl();
+			// Bumps the token even on branches below that never await anything, so a
+			// still-in-flight Pagefind request from a previous query can't resolve
+			// later and clobber what these synchronous branches just rendered.
+			requestToken++;
 			if (!currentQuery && !activeTag) {
 				// pagefind is already loaded by this point — a chip can only exist (and be
 				// clickable) once loadPagefind() has resolved and populated allTagCounts —
@@ -291,6 +401,23 @@ const searchIndex = posts.map((post) => ({
 				renderChips(allTagCounts);
 				showPanel();
 				hideDim();
+				return;
+			}
+			if (!currentQuery && activeTag) {
+				// No text to match/highlight, so skip Pagefind entirely and render like
+				// the normal post list instead of a search-excerpt list.
+				const matches = searchIndex
+					.filter((post) => post.tags.includes(activeTag))
+					.sort((a, b) => b.pubDate - a.pubDate);
+				const tagCounts = {};
+				for (const post of matches) {
+					for (const tag of post.tags) tagCounts[tag] = (tagCounts[tag] ?? 0) + 1;
+				}
+				clearSuggestions();
+				renderChips(tagCounts);
+				renderPostListResults(matches);
+				showPanel();
+				showDim();
 				return;
 			}
 			await loadPagefind();
@@ -307,7 +434,11 @@ const searchIndex = posts.map((post) => ({
 			if (token !== requestToken) return;
 			const results = await Promise.all(search.results.slice(0, 20).map((r) => r.data()));
 			if (token !== requestToken) return;
-			renderChips(search.filters?.tag ?? {});
+			// No tag chips during a text search — with 10-20+ tags on the site, the
+			// chip row would compete with the input for space; only the matching
+			// post(s) are shown here.
+			filtersEl.innerHTML = '';
+			filtersEl.hidden = true;
 			renderResults(results, search.results.length);
 			if (currentQuery) {
 				renderSuggestions(
@@ -352,19 +483,44 @@ const searchIndex = posts.map((post) => ({
 		});
 
 		input.addEventListener('input', () => {
-			clearBtn.hidden = !input.value;
 			clearTimeout(debounceTimer);
 			currentQuery = input.value.trim();
+			// Typing text drops any active tag filter — combining "search within this
+			// tag" with free text was confusing, so the two are mutually exclusive:
+			// text search always searches the whole site.
+			if (currentQuery && activeTag) {
+				activeTag = null;
+				updateActiveTagIndicator();
+			}
 			debounceTimer = setTimeout(runSearch, 180);
 		});
 
+		// Doubles as the panel's close button (see showPanel) — Escape and
+		// click-outside both work too, but neither is obvious on mobile without a
+		// keyboard, so this stays the explicit, always-visible affordance.
 		clearBtn.addEventListener('click', () => {
-			input.value = '';
-			clearBtn.hidden = true;
-			currentQuery = '';
-			runSearch();
-			input.focus();
+			hidePanel();
+			input.blur();
 		});
+
+		activeTagChip.addEventListener('click', () => {
+			activeTag = null;
+			updateActiveTagIndicator();
+			runSearch();
+		});
+
+		// Restore query/tag from the URL (e.g. a shared link or a reload) so the
+		// same search reappears instead of a blank, unfocused input.
+		const initialParams = new URLSearchParams(location.search);
+		const initialQuery = initialParams.get('q') ?? '';
+		const initialTag = initialParams.get('tag');
+		if (initialQuery || initialTag) {
+			input.value = initialQuery;
+			currentQuery = initialQuery.trim();
+			activeTag = initialTag;
+			updateActiveTagIndicator();
+			runSearch();
+		}
 
 		// Warm the pagefind index up during idle time so it's already loaded by
 		// the time someone actually focuses the search box.
@@ -390,7 +546,7 @@ const searchIndex = posts.map((post) => ({
 	}
 	#search-input {
 		width: 100%;
-		padding: 0.5em 2em 0.5em 0.7em;
+		padding: 0.5em 2.6em 0.5em 0.7em;
 		border: 1px solid var(--border);
 		border-radius: 4px;
 		background: var(--bg);
@@ -400,7 +556,7 @@ const searchIndex = posts.map((post) => ({
 	}
 	#search-input:focus {
 		outline: none;
-		box-shadow: inset 0 -2px 0 0 var(--accent);
+		border-bottom-color: var(--accent);
 	}
 	#search-input::-webkit-search-cancel-button {
 		display: none;
@@ -408,21 +564,42 @@ const searchIndex = posts.map((post) => ({
 	#search-clear {
 		position: absolute;
 		top: 0;
-		right: 0.2em;
-		height: 100%;
-		padding: 0 0.5em;
+		right: 0;
+		bottom: 0;
+		align-items: center;
+		justify-content: center;
+		width: 2.4em;
+		padding: 0;
 		border: none;
-		background: none;
-		color: var(--muted);
+		border-radius: 0 4px 0 0;
+		background: var(--accent);
+		color: var(--bg);
 		font-size: 1.3em;
 		line-height: 1;
 		cursor: pointer;
 	}
+	#search-clear:not([hidden]) {
+		display: flex;
+	}
 	#search-clear:hover {
-		color: var(--accent);
+		filter: brightness(1.1);
 	}
 	.search:has(#search-panel:not([hidden])) #search-input {
 		border-radius: 4px 4px 0 0;
+	}
+	#active-tag-bar {
+		margin-top: 0.5em;
+	}
+	#active-tag-chip {
+		font: inherit;
+		font-size: 0.85em;
+		color: var(--bg);
+		background: var(--accent);
+		border: 1px solid var(--accent);
+		border-radius: 999px;
+		padding: 0.2em 0.7em;
+		font-weight: bold;
+		cursor: pointer;
 	}
 	#search-panel {
 		position: absolute;
@@ -481,6 +658,11 @@ const searchIndex = posts.map((post) => ({
 	#search-results :global(li) {
 		padding: 0.6em 0;
 		border-top: 1px solid var(--border);
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 1.5em;
+		flex-wrap: wrap;
 	}
 	#search-results :global(li:first-child) {
 		border-top: none;
@@ -497,6 +679,38 @@ const searchIndex = posts.map((post) => ({
 		background: var(--accent);
 		color: var(--bg);
 		border-radius: 2px;
+	}
+	/* Pure tag browsing renders like PostList.astro's list — mirrors its
+	   classes/layout here since dynamically created nodes can't reuse its
+	   scoped styles directly. */
+	#search-results :global(.post-meta) {
+		flex: 1;
+	}
+	#search-results :global(.post-desc) {
+		color: var(--muted);
+		font-size: 0.9em;
+		font-weight: normal;
+		margin: 0.1em 0 0;
+	}
+	#search-results :global(.tags) {
+		display: flex;
+		gap: 0.5em;
+		flex-wrap: wrap;
+		margin-top: 0.3em;
+	}
+	#search-results :global(a.tag) {
+		font-size: 0.8em;
+		font-weight: normal;
+		color: var(--muted);
+		text-decoration: none;
+	}
+	#search-results :global(a.tag:hover) {
+		color: var(--accent);
+	}
+	#search-results :global(.date) {
+		color: var(--muted);
+		font-size: 0.9em;
+		white-space: nowrap;
 	}
 	#search-suggestions {
 		margin: 0.8em 0 0;
