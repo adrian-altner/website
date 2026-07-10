@@ -17,6 +17,7 @@ const posts = defineCollection({
 			tags: z.array(z.string()).optional(),
 			// Draft posts only build/render in `astro dev`; excluded from production builds.
 			draft: z.boolean().optional().default(false),
+			lang: z.enum(['de', 'en']).optional().default('de'),
 		}),
 });
 
@@ -28,6 +29,7 @@ const pages = defineCollection({
 	schema: z.object({
 		title: z.string(),
 		description: z.string(),
+		lang: z.enum(['de', 'en']).optional().default('de'),
 	}),
 });
 

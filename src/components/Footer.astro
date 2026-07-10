@@ -1,16 +1,23 @@
 ---
+import { defaultLang } from '../i18n/ui';
+import { useTranslations } from '../i18n/utils';
+
+const lang = Astro.currentLocale ?? defaultLang;
+const t = useTranslations(lang);
+const colophonHref = lang === 'en' ? '/en/colophon' : '/kolophon';
+const rssHref = lang === 'en' ? '/en/rss.xml' : '/rss.xml';
 ---
 
 <footer>
 	<div class="footer-inner">
-		<a href="/rss.xml" aria-label="Abonnieren">
+		<a href={rssHref} aria-label={t('footer.subscribe')}>
 			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 				<path d="M4 11a9 9 0 0 1 9 9"></path>
 				<path d="M4 4a16 16 0 0 1 16 16"></path>
 				<circle cx="5" cy="19" r="1"></circle>
 			</svg>
 		</a>
-		<a href="/kolophon" aria-label="Kolophon">
+		<a href={colophonHref} aria-label={t('footer.colophon')}>
 			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 				<circle cx="12" cy="12" r="10"></circle>
 				<line x1="12" y1="16" x2="12" y2="12"></line>

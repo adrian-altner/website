@@ -1,21 +1,21 @@
 import { getCollection } from 'astro:content';
 import rss from '@astrojs/rss';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 
 export async function GET(context) {
 	const posts = await getCollection(
 		'posts',
-		({ data }) => (import.meta.env.DEV || !data.draft) && data.lang === 'de',
+		({ data }) => (import.meta.env.DEV || !data.draft) && data.lang === 'en',
 	);
 	return rss({
 		title: SITE_TITLE,
-		description: SITE_DESCRIPTION.de,
+		description: SITE_DESCRIPTION.en,
 		site: context.site,
 		items: posts.map((post) => ({
 			...post.data,
-			link: `/beitrag/${post.id}/`,
+			link: `/en/post/${post.id}/`,
 		})),
 		stylesheet: '/rss/styles.xsl',
-		customData: '<language>de-de</language>',
+		customData: '<language>en-us</language>',
 	});
 }

@@ -1,5 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
+import { defaultLang } from '../i18n/ui';
+import { postUrl, useTranslations } from '../i18n/utils';
 
 // Strips just enough Markdown syntax that a fuzzy-matched excerpt from the raw
 // body reads as plain text instead of showing stray #, *, [] characters.
@@ -13,12 +15,25 @@ function stripMarkdown(md: string) {
 		.trim();
 }
 
+const lang = Astro.currentLocale ?? defaultLang;
+const t = useTranslations(lang);
+const messages = {
+	searching: t('search.searching'),
+	noResults: t('search.noResults'),
+	resultOne: t('search.resultOne'),
+	resultsTemplate: t('search.resultsTemplate'),
+	devOnly: t('search.devOnly'),
+};
+
 // Title/description/tag/body index for the client-side fuzzy fallback (see below) —
 // Pagefind itself does no typo-tolerant matching, only stemming and prefix matching.
-const posts = await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
+const posts = await getCollection(
+	'posts',
+	({ data }) => (import.meta.env.DEV || !data.draft) && data.lang === lang,
+);
 const searchIndex = posts.map((post) => ({
 	title: post.data.title,
-	url: `/beitrag/${post.id}/`,
+	url: postUrl(post.data.lang, post.id),
 	description: post.data.description,
 	tags: post.data.tags ?? [],
 	body: stripMarkdown(post.body ?? ''),
@@ -27,20 +42,21 @@ const searchIndex = posts.map((post) => ({
 
 <div id="search-backdrop" hidden></div>
 <div class="search">
-	<label for="search-input" class="sr-only">Suche</label>
-	<input id="search-input" type="search" placeholder="Suchen…" autocomplete="off" />
-	<button type="button" id="search-clear" aria-label="Suche leeren" hidden>×</button>
+	<label for="search-input" class="sr-only">{t('search.label')}</label>
+	<input id="search-input" type="search" placeholder={t('search.placeholder')} autocomplete="off" />
+	<button type="button" id="search-clear" aria-label={t('search.clear')} hidden>×</button>
 	<div id="search-panel" hidden>
 		<div id="search-filters" hidden></div>
 		<p id="search-status"></p>
 		<ul id="search-results"></ul>
 		<div id="search-suggestions" hidden>
-			<p class="suggestions-label">Meintest du:</p>
+			<p class="suggestions-label">{t('search.suggestions')}</p>
 			<ul id="search-suggestions-list"></ul>
 		</div>
 	</div>
 </div>
 <script type="application/json" id="search-index-data" is:inline set:html={JSON.stringify(searchIndex)} />
+<script type="application/json" id="search-messages-data" is:inline set:html={JSON.stringify(messages)} />
 
 <script>
 	const container = document.querySelector('.search');
@@ -54,6 +70,8 @@ const searchIndex = posts.map((post) => ({
 	const suggestionsEl = document.getElementById('search-suggestions');
 	const suggestionsListEl = document.getElementById('search-suggestions-list');
 	const indexDataEl = document.getElementById('search-index-data');
+	const messagesDataEl = document.getElementById('search-messages-data');
+	const messages = JSON.parse(messagesDataEl?.textContent || '{}');
 
 	if (
 		container &&
@@ -90,8 +108,7 @@ const searchIndex = posts.map((post) => ({
 						allTagCounts = filters.tag ?? {};
 					})
 					.catch(() => {
-						statusEl.textContent =
-							'Suche erfordert einen Production-Build (npm run build) — im Dev-Server nicht verfügbar.';
+						statusEl.textContent = messages.devOnly;
 					});
 			}
 			return pagefindPromise;
@@ -206,10 +223,11 @@ const searchIndex = posts.map((post) => ({
 		function renderResults(results, total) {
 			resultsEl.innerHTML = '';
 			if (results.length === 0) {
-				statusEl.textContent = 'Keine Ergebnisse.';
+				statusEl.textContent = messages.noResults;
 				return;
 			}
-			statusEl.textContent = total === 1 ? '1 Treffer' : `${total} Treffer`;
+			statusEl.textContent =
+				total === 1 ? messages.resultOne : messages.resultsTemplate.replace('{n}', String(total));
 			for (const result of results) {
 				const li = document.createElement('li');
 				const a = document.createElement('a');
@@ -279,7 +297,7 @@ const searchIndex = posts.map((post) => ({
 			showDim();
 			clearSuggestions();
 			const token = ++requestToken;
-			statusEl.textContent = 'Suche…';
+			statusEl.textContent = messages.searching;
 			const search = await pagefind.search(
 				currentQuery || null,
 				activeTag ? { filters: { tag: activeTag } } : undefined,

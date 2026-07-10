@@ -2,10 +2,14 @@
 import type { CollectionEntry } from 'astro:content';
 import FormattedDate from '../components/FormattedDate.astro';
 import BaseLayout from './BaseLayout.astro';
+import { defaultLang } from '../i18n/ui';
+import { tagUrl, useTranslations } from '../i18n/utils';
 
 type Props = CollectionEntry<'posts'>['data'];
 
-const { title, description, pubDate, updatedDate, tags } = Astro.props;
+const { title, description, pubDate, updatedDate, tags, lang: postLang } = Astro.props;
+const lang = Astro.currentLocale ?? postLang ?? defaultLang;
+const t = useTranslations(lang);
 ---
 
 <BaseLayout title={title} description={description}>
@@ -15,14 +19,14 @@ const { title, description, pubDate, updatedDate, tags } = Astro.props;
 			<p class="date">
 				<FormattedDate date={pubDate} />
 				{updatedDate && (
-					<span class="updated"> · aktualisiert <FormattedDate date={updatedDate} /></span>
+					<span class="updated"> · {t('post.updated')} <FormattedDate date={updatedDate} /></span>
 				)}
 			</p>
 			{tags && tags.length > 0 && (
 				<div class="tags">
 					{tags.map((tag) => (
 						<a
-							href={`/tag/${tag}/`}
+							href={tagUrl(lang, tag)}
 							class="tag"
 							data-pagefind-filter="tag[data-tag-value]"
 							data-tag-value={tag}

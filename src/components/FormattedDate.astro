@@ -1,13 +1,17 @@
 ---
+import { defaultLang } from '../i18n/ui';
+
 interface Props {
 	date: Date;
 	iso?: boolean;
 }
 
 const { date, iso = false } = Astro.props;
+const lang = Astro.currentLocale ?? defaultLang;
+const dateLocale = { de: 'de-DE', en: 'en-US' }[lang];
 const formatted = iso
 	? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-	: date.toLocaleDateString('de-DE', {
+	: date.toLocaleDateString(dateLocale, {
 			year: 'numeric',
 			month: 'short',
 			day: 'numeric',

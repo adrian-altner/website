@@ -2,7 +2,8 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="html" version="1.0" encoding="UTF-8" indent="yes" />
 	<xsl:template match="/rss/channel">
-		<html lang="de">
+		<xsl:variable name="lang" select="substring(language, 1, 2)" />
+		<html lang="{$lang}">
 			<head>
 				<title><xsl:value-of select="title" /> — RSS Feed</title>
 				<meta charset="utf-8" />
@@ -137,25 +138,55 @@
 					<p class="lede"><xsl:value-of select="description" /></p>
 					<p class="feed-url">
 						<code id="feed-url"></code>
-						<button type="button" id="copy-feed-url" class="copy-btn">Kopieren</button>
+						<xsl:choose>
+							<xsl:when test="$lang = 'en'">
+								<button type="button" id="copy-feed-url" class="copy-btn" data-copied="Copied!">Copy</button>
+							</xsl:when>
+							<xsl:otherwise>
+								<button type="button" id="copy-feed-url" class="copy-btn" data-copied="Kopiert!">Kopieren</button>
+							</xsl:otherwise>
+						</xsl:choose>
 					</p>
-					<p class="feed-note">
-						Mit einem Feedreader abonnieren, um neue Beiträge von
-						<a href="{link}"><xsl:value-of select="link" /></a> zu erhalten.
-					</p>
-					<details class="rss-help">
-						<summary>Was ist RSS?</summary>
-						<p>
-							RSS ist ein offener Standard, mit dem du neue Beiträge automatisch bekommst,
-							ohne eine E-Mail-Adresse anzugeben oder von einem Algorithmus abhängig zu sein.
-							Ein Feedreader prüft den Feed regelmäßig und zeigt dir neue Einträge an.
-						</p>
-						<p>
-							Zum Einstieg: <a href="https://netnewswire.com/">NetNewsWire</a>,
-							<a href="https://freshrss.org/">FreshRSS</a> oder
-							<a href="https://feedly.com/">Feedly</a>.
-						</p>
-					</details>
+					<xsl:choose>
+						<xsl:when test="$lang = 'en'">
+							<p class="feed-note">
+								Subscribe with a feed reader to get new posts from
+								<a href="{link}"><xsl:value-of select="link" /></a>.
+							</p>
+							<details class="rss-help">
+								<summary>What is RSS?</summary>
+								<p>
+									RSS is an open standard that delivers new posts to you automatically,
+									without giving up an email address or depending on an algorithm.
+									A feed reader checks the feed regularly and shows you new entries.
+								</p>
+								<p>
+									To get started: <a href="https://netnewswire.com/">NetNewsWire</a>,
+									<a href="https://freshrss.org/">FreshRSS</a>, or
+									<a href="https://feedly.com/">Feedly</a>.
+								</p>
+							</details>
+						</xsl:when>
+						<xsl:otherwise>
+							<p class="feed-note">
+								Mit einem Feedreader abonnieren, um neue Beiträge von
+								<a href="{link}"><xsl:value-of select="link" /></a> zu erhalten.
+							</p>
+							<details class="rss-help">
+								<summary>Was ist RSS?</summary>
+								<p>
+									RSS ist ein offener Standard, mit dem du neue Beiträge automatisch bekommst,
+									ohne eine E-Mail-Adresse anzugeben oder von einem Algorithmus abhängig zu sein.
+									Ein Feedreader prüft den Feed regelmäßig und zeigt dir neue Einträge an.
+								</p>
+								<p>
+									Zum Einstieg: <a href="https://netnewswire.com/">NetNewsWire</a>,
+									<a href="https://freshrss.org/">FreshRSS</a> oder
+									<a href="https://feedly.com/">Feedly</a>.
+								</p>
+							</details>
+						</xsl:otherwise>
+					</xsl:choose>
 					<hr />
 					<ul>
 						<xsl:for-each select="item">
@@ -178,7 +209,7 @@
 							var url = window.location.href;
 							function done() {
 								clearTimeout(resetTimer);
-								btn.textContent = 'Kopiert!';
+								btn.textContent = btn.getAttribute('data-copied');
 								resetTimer = setTimeout(function () {
 									btn.textContent = originalLabel;
 								}, 1500);

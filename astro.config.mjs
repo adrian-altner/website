@@ -10,6 +10,13 @@ export default defineConfig({
 	site: 'https://achis.blog',
 	adapter: node({ mode: 'standalone' }),
 	integrations: [mdx(), sitemap()],
+	i18n: {
+		locales: ['de', 'en'],
+		defaultLocale: 'de',
+		routing: {
+			prefixDefaultLocale: false,
+		},
+	},
 	fonts: [
 		{
 			provider: fontProviders.google(),
