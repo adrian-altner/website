@@ -5,6 +5,19 @@
 	--text: #2a2a2a;
 	--muted: #565650;
 	--border: #c8c8c2;
+
+	/* Fluid type scale: 16px at ~400px viewports up to 21.5px at ~2600px+ (4K-friendly) */
+	--font-size: clamp(16px, 0.25vi + 15px, 21.5px);
+	--line-height: 1.85;
+
+	/* Content column width, expressed in root line-heights so it scales with the type.
+	   This is the one dial for overall page width — media-width follows it automatically. */
+	--content-width: 20rlh;
+	/* Wider bleed column for media, 1.4x the text column, same ratio Manu uses text:media */
+	--media-width: calc(var(--content-width) * 1.4);
+
+	font-size: var(--font-size);
+	line-height: var(--line-height);
 }
 
 * {
@@ -19,19 +32,17 @@ body {
 	display: flex;
 	flex-direction: column;
 	min-height: 100vh;
-	font-family: var(--font-mono), ui-monospace, monospace;
+	font-family: var(--font-serif), Georgia, serif;
 	margin: 0;
 	padding: 0;
 	background-color: var(--bg);
 	color: var(--text);
-	font-size: 15px;
-	line-height: 1.7;
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 }
 
 main {
-	width: 600px;
+	width: var(--content-width);
 	max-width: calc(100% - 2em);
 	margin: 0 auto;
 	padding: 2em 1em 4em;
@@ -64,7 +75,31 @@ p {
 }
 
 .prose p {
-	margin-bottom: 1.5em;
+	hyphens: auto;
+}
+
+.prose > p {
+	margin: 0;
+	text-indent: 1.5em;
+}
+
+.prose > p:first-child,
+.prose > h1 + p,
+.prose > h2 + p,
+.prose > h3 + p,
+.prose > h4 + p,
+.prose > h5 + p,
+.prose > h6 + p,
+.prose > blockquote + p {
+	text-indent: 0;
+}
+
+.prose > * + * {
+	margin-top: 1.5em;
+}
+
+.prose > p + p {
+	margin-top: 0.6em;
 }
 
 ul, ol {
@@ -81,11 +116,24 @@ img {
 	border-radius: 4px;
 }
 
+.prose img {
+	display: block;
+	width: auto;
+	max-width: min(var(--media-width), calc(100vw - 2em));
+	max-height: calc(100vh - 4rlh);
+	margin-left: 50%;
+	transform: translateX(-50%);
+	padding: 1rlh;
+	background-color: #d4d4ce;
+	box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+}
+
 code {
 	padding: 2px 5px;
 	background-color: #d4d4ce;
 	border-radius: 2px;
 	font-size: 0.9em;
+	font-family: var(--font-mono), ui-monospace, monospace;
 }
 
 pre {
@@ -93,6 +141,7 @@ pre {
 	border-radius: 4px;
 	overflow-x: auto;
 	background-color: #d4d4ce;
+	font-family: var(--font-mono), ui-monospace, monospace;
 }
 
 pre > code {
@@ -124,7 +173,6 @@ th, td {
 }
 
 @media (max-width: 600px) {
-	body { font-size: 14px; }
 	main { padding: 1.5em 1em 3em; }
 }
 

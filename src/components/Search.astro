@@ -18,7 +18,7 @@ function stripMarkdown(md: string) {
 const posts = await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
 const searchIndex = posts.map((post) => ({
 	title: post.data.title,
-	url: `/post/${post.id}/`,
+	url: `/beitrag/${post.id}/`,
 	description: post.data.description,
 	tags: post.data.tags ?? [],
 	body: stripMarkdown(post.body ?? ''),
@@ -404,7 +404,6 @@ const searchIndex = posts.map((post) => ({
 		border-top: none;
 		border-radius: 0 0 4px 4px;
 		background: var(--bg);
-		font-family: var(--font-mono), ui-monospace, monospace;
 		z-index: 10;
 	}
 	#search-filters {

@@ -13,7 +13,7 @@ const { posts } = Astro.props;
 	{posts.map((post) => (
 		<li>
 			<div class="post-meta">
-				<a href={`/post/${post.id}/`} class="post-title">{post.data.title}</a>
+				<a href={`/beitrag/${post.id}/`} class="post-title">{post.data.title}</a>
 				<p class="post-desc">{post.data.description}</p>
 				{post.data.tags && post.data.tags.length > 0 && (
 					<div class="tags">
@@ -23,7 +23,7 @@ const { posts } = Astro.props;
 					</div>
 				)}
 			</div>
-			<span class="date"><FormattedDate date={post.data.pubDate} /></span>
+			<span class="date"><FormattedDate date={post.data.pubDate} iso /></span>
 		</li>
 	))}
 </ul>
@@ -38,7 +38,7 @@ const { posts } = Astro.props;
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		gap: 1em;
+		gap: 3em;
 		padding: 0.6em 0;
 		flex-wrap: wrap;
 	}

@@ -18,5 +18,12 @@ export default defineConfig({
 			weights: [400, 700],
 			styles: ['normal'],
 		},
+		{
+			provider: fontProviders.google(),
+			name: 'Literata',
+			cssVariable: '--font-serif',
+			weights: [400, 700],
+			styles: ['normal', 'italic'],
+		},
 	],
 });

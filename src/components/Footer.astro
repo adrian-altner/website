@@ -3,14 +3,26 @@
 
 <footer>
 	<div class="footer-inner">
-		<a href="/colophon">Kolophon</a>
-		<a href="/rss.xml">RSS-Feed</a>
+		<a href="/rss.xml" aria-label="Abonnieren">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M4 11a9 9 0 0 1 9 9"></path>
+				<path d="M4 4a16 16 0 0 1 16 16"></path>
+				<circle cx="5" cy="19" r="1"></circle>
+			</svg>
+		</a>
+		<a href="/kolophon" aria-label="Kolophon">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<circle cx="12" cy="12" r="10"></circle>
+				<line x1="12" y1="16" x2="12" y2="12"></line>
+				<line x1="12" y1="8" x2="12.01" y2="8"></line>
+			</svg>
+		</a>
 	</div>
 </footer>
 
 <style>
 	footer {
-		width: 600px;
+		width: var(--content-width);
 		max-width: calc(100% - 2em);
 		margin: 0 auto;
 		padding: 0 1em 2em;
@@ -18,14 +30,42 @@
 	.footer-inner {
 		display: flex;
 		gap: 1em;
-		flex-wrap: wrap;
+		align-items: center;
+		justify-content: flex-end;
 	}
 	.footer-inner a {
+		position: relative;
+		display: inline-flex;
 		color: var(--muted);
-		text-decoration: underline;
-		font-size: 0.85em;
 	}
 	.footer-inner a:hover {
 		color: var(--accent);
+	}
+	.footer-inner svg {
+		width: 1.3em;
+		height: 1.3em;
+	}
+	.footer-inner a::after {
+		content: attr(aria-label);
+		position: absolute;
+		bottom: 100%;
+		left: 50%;
+		transform: translateX(-50%) translateY(-0.4em);
+		background: var(--text);
+		color: var(--bg);
+		font-family: var(--font-mono), ui-monospace, monospace;
+		font-size: 0.75rem;
+		white-space: nowrap;
+		padding: 0.3em 0.6em;
+		border-radius: 4px;
+		opacity: 0;
+		pointer-events: none;
+		transition:
+			opacity 0.15s ease,
+			transform 0.15s ease;
+	}
+	.footer-inner a:hover::after {
+		opacity: 1;
+		transform: translateX(-50%) translateY(-0.6em);
 	}
 </style>

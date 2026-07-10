@@ -8,7 +8,7 @@ import { SITE_TITLE } from '../consts';
 		<a class="site-title" href="/">{SITE_TITLE}</a>
 		<nav>
 			<a href="/">Beiträge</a>
-			<a href="/about">Über mich</a>
+			<a href="/ueber-mich">Über mich</a>
 		</nav>
 	</div>
 	<Search />
@@ -28,7 +28,7 @@ import { SITE_TITLE } from '../consts';
 
 <style>
 	header {
-		width: 600px;
+		width: var(--content-width);
 		max-width: calc(100% - 2em);
 		margin: 0 auto;
 		padding: 2em 1em 0;
@@ -62,7 +62,9 @@ import { SITE_TITLE } from '../consts';
 		text-decoration: underline;
 		font-size: 0.95em;
 	}
-	nav a:hover,
+	nav a:hover {
+		color: var(--accent-hover);
+	}
 	nav a.active {
 		color: var(--accent-hover);
 		font-weight: bold;

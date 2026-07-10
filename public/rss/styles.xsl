@@ -76,6 +76,24 @@
 						font-size: 0.85em;
 						margin: 0 0 1.5em;
 					}
+					.rss-help {
+						color: var(--muted);
+						font-size: 0.85em;
+						margin: 0 0 1.5em;
+					}
+					.rss-help summary {
+						cursor: pointer;
+						color: var(--accent);
+					}
+					.rss-help summary:hover {
+						color: var(--accent-hover);
+					}
+					.rss-help p {
+						margin: 0.6em 0 0;
+					}
+					.rss-help a {
+						color: var(--accent);
+					}
 					hr {
 						border: none;
 						border-top: 1px solid var(--border);
@@ -125,6 +143,19 @@
 						Mit einem Feedreader abonnieren, um neue Beiträge von
 						<a href="{link}"><xsl:value-of select="link" /></a> zu erhalten.
 					</p>
+					<details class="rss-help">
+						<summary>Was ist RSS?</summary>
+						<p>
+							RSS ist ein offener Standard, mit dem du neue Beiträge automatisch bekommst,
+							ohne eine E-Mail-Adresse anzugeben oder von einem Algorithmus abhängig zu sein.
+							Ein Feedreader prüft den Feed regelmäßig und zeigt dir neue Einträge an.
+						</p>
+						<p>
+							Zum Einstieg: <a href="https://netnewswire.com/">NetNewsWire</a>,
+							<a href="https://freshrss.org/">FreshRSS</a> oder
+							<a href="https://feedly.com/">Feedly</a>.
+						</p>
+					</details>
 					<hr />
 					<ul>
 						<xsl:for-each select="item">
