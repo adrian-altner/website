@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
-import { defaultLang } from '../i18n/ui';
-import { tagUrl, useTranslations } from '../i18n/utils';
+import { defaultLang } from '@/i18n/ui';
+import { tagUrl, useTranslations } from '@/i18n/utils';
 
 const lang = Astro.currentLocale ?? defaultLang;
 const t = useTranslations(lang);
@@ -82,6 +82,8 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 		flex-direction: column;
 		gap: 0.4em;
 		margin-top: 1em;
+		padding-bottom: 1em;
+		border-bottom: 1px solid var(--border);
 	}
 	.filter-menu {
 		display: flex;
@@ -302,8 +304,8 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 				.filter((li): li is HTMLElement => li !== null && !li.hidden);
 			if (visibleRows.length === 0) {
 				tagMenuEl.style.maxHeight = '';
-				toggleTagsBtn.hidden = true;
-				toggleTagsBtn.classList.remove('expanded');
+				toggleTagsBtn!.hidden = true;
+				toggleTagsBtn!.classList.remove('expanded');
 				return;
 			}
 			const rowHeight = visibleRows[0].getBoundingClientRect().height;
@@ -311,8 +313,8 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 			// scrollHeight reflects the full unclipped content regardless of the
 			// max-height/overflow below, so it's safe to compare against it here.
 			const overflowing = tagMenuEl.scrollHeight > maxHeight + 1;
-			toggleTagsBtn.hidden = !overflowing;
-			toggleTagsBtn.classList.toggle('expanded', tagsExpanded && overflowing);
+			toggleTagsBtn!.hidden = !overflowing;
+			toggleTagsBtn!.classList.toggle('expanded', tagsExpanded && overflowing);
 			tagMenuEl.style.maxHeight = !overflowing || tagsExpanded ? '' : `${maxHeight}px`;
 		}
 
@@ -331,16 +333,16 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 				link.classList.toggle('active', activeTags.has(link.getAttribute('data-tag') as string));
 			});
 
-			yearChip.hidden = !activeYear;
-			if (activeYear) yearChip.textContent = `${activeYear} ×`;
+			yearChip!.hidden = !activeYear;
+			if (activeYear) yearChip!.textContent = `${activeYear} ×`;
 
-			tagChipsEl.innerHTML = '';
+			tagChipsEl!.innerHTML = '';
 			activeTags.forEach((tag) => {
 				// Cloning yearChip (rather than document.createElement) carries
 				// over the class Astro's style-scoping compiler injects onto it —
 				// a freshly created element wouldn't have that class and would
 				// silently fall back to unstyled default button chrome.
-				const chip = yearChip.cloneNode(false) as HTMLButtonElement;
+				const chip = yearChip!.cloneNode(false) as HTMLButtonElement;
 				chip.hidden = false;
 				chip.removeAttribute('data-remove');
 				chip.textContent = `#${tag} ×`;
@@ -350,10 +352,10 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 					applyFilter();
 					updateUrl();
 				});
-				tagChipsEl.appendChild(chip);
+				tagChipsEl!.appendChild(chip);
 			});
 
-			statusEl.hidden = !activeYear && activeTags.size === 0;
+			statusEl!.hidden = !activeYear && activeTags.size === 0;
 		}
 
 		function updateUrl() {

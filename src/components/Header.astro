@@ -1,25 +1,53 @@
 ---
 import { getRelativeLocaleUrl } from 'astro:i18n';
-import { SITE_TITLE } from '../consts';
-import { defaultLang, languages } from '../i18n/ui';
-import { useTranslations } from '../i18n/utils';
+import { SITE_TITLE } from '@/consts';
+import { defaultLang, languages } from '@/i18n/ui';
+import { useTranslations } from '@/i18n/utils';
 
+interface Props {
+	// URL of this page's translation in the other language, if one exists —
+	// used by the language switcher instead of the homepage fallback.
+	translationHref?: string;
+}
+
+const { translationHref } = Astro.props;
 const lang = Astro.currentLocale ?? defaultLang;
 const t = useTranslations(lang);
+
+// Active-link detection (formerly HeaderLink.astro, inlined here since it's
+// the only place it was used): computed server-side from the current
+// request URL, so nav highlighting works without any client-side JS.
+const currentPath = Astro.url.pathname;
+const postsHref = getRelativeLocaleUrl(lang, '/');
+const aboutHref = '/ueber-mich';
+const isPostsActive = currentPath === postsHref;
+const isAboutActive = currentPath === aboutHref || currentPath.startsWith(aboutHref);
 ---
 
 <header>
 	<div class="header-top">
 		<a class="site-title" href={getRelativeLocaleUrl(lang, '/')}>{SITE_TITLE}</a>
 		<nav>
-			<a href={getRelativeLocaleUrl(lang, '/')} data-home>{t('nav.posts')}</a>
-			<a href="/ueber-mich">{t('nav.about')}</a>
+			<a
+				href={postsHref}
+				class:list={{ active: isPostsActive }}
+				aria-current={isPostsActive ? 'page' : undefined}
+			>
+				{t('nav.posts')}
+			</a>
+			<a
+				href={aboutHref}
+				class:list={{ active: isAboutActive }}
+				aria-current={isAboutActive ? 'page' : undefined}
+			>
+				{t('nav.about')}
+			</a>
 			<span class="lang-switch">
 				{Object.keys(languages).map((code) =>
 					code === lang ? (
 						<span class="lang-current" aria-current="true">{code.toUpperCase()}</span>
 					) : (
-						<a href={getRelativeLocaleUrl(code, '/')}>{code.toUpperCase()}</a>
+						<a href={translationHref ?? getRelativeLocaleUrl(code, '/')}>{code.toUpperCase()}</a>
 					),
 				)}
 			</span>
@@ -27,24 +55,10 @@ const t = useTranslations(lang);
 	</div>
 </header>
 
-<script>
-	const links = document.querySelectorAll('header nav > a');
-	links.forEach((link) => {
-		const href = link.getAttribute('href');
-		if (!href) return;
-		const path = window.location.pathname;
-		const isHome = link.hasAttribute('data-home');
-		if (href === path || (!isHome && path.startsWith(href))) {
-			link.classList.add('active');
-			link.setAttribute('aria-current', 'page');
-		}
-	});
-</script>
-
 <style>
 	header {
 		width: var(--content-width);
-		max-width: calc(100% - 2em);
+		max-width: 100%;
 		margin: 0 auto;
 		padding: 2em 1em 0;
 	}
@@ -58,6 +72,7 @@ const t = useTranslations(lang);
 	.site-title {
 		font-size: 1.4em;
 		font-weight: bold;
+		font-family: var(--font-heading), system-ui, sans-serif;
 		text-decoration: none;
 		color: var(--text);
 	}
@@ -69,6 +84,7 @@ const t = useTranslations(lang);
 		align-items: center;
 		gap: 1em;
 		flex-wrap: wrap;
+		font-family: var(--font-heading), system-ui, sans-serif;
 	}
 	nav a {
 		display: inline-block;

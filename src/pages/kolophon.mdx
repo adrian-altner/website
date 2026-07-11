@@ -1,7 +1,15 @@
 ---
-title: 'Kolophon'
-description: 'Astro mit Node-Adapter, Caddy als Reverse Proxy und systemd auf einem eigenen Server — die komplette Konfiguration.'
+layout: "@/layouts/BaseLayout.astro"
+title: Kolophon
+description: Astro mit Node-Adapter, Caddy als Reverse Proxy und systemd auf einem eigenen Server — die komplette Konfiguration.
 ---
+
+<article>
+<header>
+<h1>Kolophon</h1>
+<hr />
+</header>
+<div class="prose">
 
 achis.blog läuft auf einem eigenen VPS. Kein Managed Hosting, kein Vercel, kein Netlify — stattdessen ein Server, ein Reverse Proxy und ein systemd-Service. Hier ist, wie das zusammenhängt.
 
@@ -108,3 +116,6 @@ Das Build passiert lokal — auf den Server kommt nur das fertig gebaute `dist/`
 4. `npm ci --omit=dev` auf dem Server
 5. `systemctl restart achis-blog` startet den Node-Prozess neu
 6. Caddy routet neue Anfragen sofort an den frischen Prozess
+
+</div>
+</article>

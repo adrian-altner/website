@@ -1,6 +1,6 @@
 ---
-import { defaultLang } from '../i18n/ui';
-import { useTranslations } from '../i18n/utils';
+import { defaultLang } from '@/i18n/ui';
+import { useTranslations } from '@/i18n/utils';
 
 const lang = Astro.currentLocale ?? defaultLang;
 const t = useTranslations(lang);
@@ -46,7 +46,7 @@ const privacyHref = lang === 'en' ? '/en/privacy-policy' : '/datenschutz';
 <style>
 	footer {
 		width: var(--content-width);
-		max-width: calc(100% - 2em);
+		max-width: 100%;
 		margin: 0 auto;
 		padding: 0 1em 2em;
 	}
@@ -76,7 +76,7 @@ const privacyHref = lang === 'en' ? '/en/privacy-policy' : '/datenschutz';
 		transform: translateX(-50%) translateY(-0.4em);
 		background: var(--text);
 		color: var(--bg);
-		font-family: var(--font-mono), ui-monospace, monospace;
+		font-family: var(--font-heading), system-ui, sans-serif;
 		font-size: 0.75rem;
 		white-space: nowrap;
 		padding: 0.3em 0.6em;
@@ -90,5 +90,16 @@ const privacyHref = lang === 'en' ? '/en/privacy-policy' : '/datenschutz';
 	.footer-inner a:hover::after {
 		opacity: 1;
 		transform: translateX(-50%) translateY(-0.6em);
+	}
+	/* The group is right-aligned (flex-end), so a centered tooltip on the
+	   last icon can overflow past the viewport's right edge on narrow
+	   screens — anchor it to the icon's right edge instead of its center. */
+	.footer-inner a:last-child::after {
+		left: auto;
+		right: 0;
+		transform: translateY(-0.4em);
+	}
+	.footer-inner a:last-child:hover::after {
+		transform: translateY(-0.6em);
 	}
 </style>

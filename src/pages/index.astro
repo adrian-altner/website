@@ -1,11 +1,11 @@
 ---
 import { getCollection } from 'astro:content';
-import PostList from '../components/PostList.astro';
-import PostFilters from '../components/PostFilters.astro';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { SITE_TITLE } from '../consts';
-import { defaultLang } from '../i18n/ui';
-import { useTranslations } from '../i18n/utils';
+import PostList from '@/components/PostList.astro';
+import PostFilters from '@/components/PostFilters.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { SITE_TITLE } from '@/consts';
+import { defaultLang } from '@/i18n/ui';
+import { useTranslations } from '@/i18n/utils';
 
 const lang = Astro.currentLocale ?? defaultLang;
 const t = useTranslations(lang);

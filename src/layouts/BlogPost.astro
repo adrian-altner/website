@@ -1,25 +1,30 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import FormattedDate from '../components/FormattedDate.astro';
-import BaseLayout from './BaseLayout.astro';
-import { defaultLang } from '../i18n/ui';
-import { tagUrl, useTranslations } from '../i18n/utils';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { defaultLang } from '@/i18n/ui';
+import { formatDate, postUrl, tagUrl, useTranslations } from '@/i18n/utils';
 
 type Props = CollectionEntry<'posts'>['data'];
 
-const { title, description, pubDate, updatedDate, tags, lang: postLang } = Astro.props;
+const { title, description, pubDate, updatedDate, tags, lang: postLang, translationId } =
+	Astro.props;
 const lang = Astro.currentLocale ?? postLang ?? defaultLang;
 const t = useTranslations(lang);
+const translationHref = translationId ? postUrl(lang === 'en' ? 'de' : 'en', translationId) : undefined;
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} translationHref={translationHref}>
 	<article>
 		<header class="post-header">
 			<h1>{title}</h1>
 			<p class="date">
-				<FormattedDate date={pubDate} />
+				<time datetime={pubDate.toISOString()}>{formatDate(pubDate, lang)}</time>
 				{updatedDate && (
-					<span class="updated"> · {t('post.updated')} <FormattedDate date={updatedDate} /></span>
+					<span class="updated">
+						{' '}
+						· {t('post.updated')}{' '}
+						<time datetime={updatedDate.toISOString()}>{formatDate(updatedDate, lang)}</time>
+					</span>
 				)}
 			</p>
 			{tags && tags.length > 0 && (

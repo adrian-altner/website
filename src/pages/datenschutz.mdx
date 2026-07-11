@@ -1,8 +1,7 @@
 ---
-layout: ../layouts/BaseLayout.astro
+layout: "@/layouts/BaseLayout.astro"
 title: Datenschutzerklärung
 description: Datenschutzerklärung und Informationen zum Datenschutz für achis.blog.
-noindex: true
 ---
 
 import { CONTACT_NAME, CONTACT_EMAIL } from '../consts';
@@ -13,7 +12,7 @@ import { reverseText, encodeEmail } from '../lib/contact';
 		<h1>Datenschutzerklärung</h1>
 		<hr />
 	</header>
-	<div class="prose no-indent">
+	<div class="prose">
 
 _Zuletzt aktualisiert: Juli 2026_
 

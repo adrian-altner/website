@@ -2,7 +2,6 @@
 layout: ../../layouts/BaseLayout.astro
 title: Legal Notice
 description: Legal notice (Impressum) for achis.blog.
-noindex: true
 ---
 
 import {
@@ -20,9 +19,11 @@ import { reverseText, encodeEmail } from '../../lib/contact';
 		<h1>Legal Notice</h1>
 		<hr />
 	</header>
-	<div class="prose no-indent">
+	<div class="prose">
 
-_This is a non-binding English translation of the German [Impressum](/impressum), which is the legally binding version required under German law (§ 5 TMG)._
+_This is a non-binding English translation of the German [Impressum](/impressum), which is the legally binding version required under German law (§ 5 DDG)._
+
+## Information Pursuant to § 5 DDG
 
 <span class="r">{reverseText(CONTACT_NAME)}</span>
 <br />
@@ -34,6 +35,12 @@ _This is a non-binding English translation of the German [Impressum](/impressum)
 
 **Phone:** <span class="r">{reverseText(CONTACT_PHONE)}</span><br />
 **Email:** <span class="r">{encodeEmail(CONTACT_EMAIL)}</span>
+
+---
+
+## Responsible for Content
+
+Responsible for the content within the meaning of § 18(2) of the German Interstate Media Treaty (Medienstaatsvertrag, MStV) is the provider named above.
 
 ---
 

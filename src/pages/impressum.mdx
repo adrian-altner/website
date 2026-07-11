@@ -1,8 +1,7 @@
 ---
-layout: ../layouts/BaseLayout.astro
+layout: "@/layouts/BaseLayout.astro"
 title: Impressum
 description: Rechtliche Hinweise für achis.blog.
-noindex: true
 ---
 
 import {
@@ -20,7 +19,9 @@ import { reverseText, encodeEmail } from '../lib/contact';
 		<h1>Impressum</h1>
 		<hr />
 	</header>
-	<div class="prose no-indent">
+	<div class="prose">
+
+## Angaben gemäß § 5 DDG
 
 <span class="r">{reverseText(CONTACT_NAME)}</span>
 <br />
@@ -32,6 +33,12 @@ import { reverseText, encodeEmail } from '../lib/contact';
 
 **Telefon:** <span class="r">{reverseText(CONTACT_PHONE)}</span><br />
 **E-Mail:** <span class="r">{encodeEmail(CONTACT_EMAIL)}</span>
+
+---
+
+## Verantwortlich für den Inhalt
+
+Verantwortlich für den Inhalt nach § 18 Abs. 2 Medienstaatsvertrag (MStV) ist der oben genannte Anbieter.
 
 ---
 

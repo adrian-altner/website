@@ -3,8 +3,19 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
 const posts = defineCollection({
-	// Load Markdown and MDX files in the `src/content/posts/` directory.
-	loader: glob({ base: './src/content/posts', pattern: '**/*.{md,mdx}' }),
+	// Load Markdown and MDX files from `src/content/posts/de/` and `en/` —
+	// the subdirectory is just source-side organization by language (the
+	// `lang` field below is what the site actually uses), so strip it back
+	// out of the generated id to keep post URLs unchanged.
+	loader: glob({
+		base: './src/content/posts',
+		pattern: '**/*.{md,mdx}',
+		generateId: ({ entry }) =>
+			entry
+				.split('/')
+				.pop()
+				.replace(/\.(md|mdx)$/, ''),
+	}),
 	// Type-check frontmatter using a schema
 	schema: ({ image }) =>
 		z.object({
@@ -18,18 +29,11 @@ const posts = defineCollection({
 			// Draft posts only build/render in `astro dev`; excluded from production builds.
 			draft: z.boolean().optional().default(false),
 			lang: z.enum(['de', 'en']).optional().default('de'),
+			// id (filename without extension) of this post's translation in the
+			// other language, if one exists — lets the language switcher deep-link
+			// to the counterpart post instead of falling back to the homepage.
+			translationId: z.string().optional(),
 		}),
 });
 
-const pages = defineCollection({
-	// Standalone content pages that aren't blog posts (e.g. the colophon) —
-	// no pubDate/tags, so they never show up in the blog listing or RSS feed.
-	loader: glob({ base: './src/content/pages', pattern: '**/*.{md,mdx}' }),
-	schema: z.object({
-		title: z.string(),
-		description: z.string(),
-		lang: z.enum(['de', 'en']).optional().default('de'),
-	}),
-});
-
-export const collections = { posts, pages };
+export const collections = { posts };

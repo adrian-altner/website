@@ -1,18 +1,17 @@
 ---
 // Import the global.css file here so that it is included on
 // all pages through the use of the <BaseHead /> component.
-import '../styles/global.css';
+import '@/styles/global.css';
 import type { ImageMetadata } from 'astro';
-import FallbackImage from '../assets/blog-placeholder-1.jpg';
-import { SITE_TITLE } from '../consts';
-import { defaultLang } from '../i18n/ui';
+import FallbackImage from '@/assets/blog-placeholder.jpg';
+import { SITE_TITLE } from '@/consts';
+import { defaultLang } from '@/i18n/ui';
 import { Font } from 'astro:assets';
 
 interface Props {
 	title: string;
 	description: string;
 	image?: ImageMetadata;
-	noindex?: boolean;
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -20,7 +19,7 @@ const lang = Astro.currentLocale ?? defaultLang;
 const ogLocale = { de: 'de_DE', en: 'en_US' }[lang];
 const rssPath = lang === 'en' ? 'en/rss.xml' : 'rss.xml';
 
-const { title, description, image = FallbackImage, noindex = false } = Astro.props;
+const { title, description, image = FallbackImage } = Astro.props;
 ---
 
 <!-- Global Metadata -->
@@ -36,10 +35,11 @@ const { title, description, image = FallbackImage, noindex = false } = Astro.pro
 	href={new URL(rssPath, Astro.site)}
 />
 <meta name="generator" content={Astro.generator} />
-{noindex && <meta name="robots" content="noindex, nofollow" />}
+<meta name="robots" content="noindex, nofollow" />
 
-<Font cssVariable="--font-mono" preload />
-<Font cssVariable="--font-serif" />
+<Font cssVariable="--font-sans" preload />
+<Font cssVariable="--font-heading" preload />
+<Font cssVariable="--font-mono" />
 
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
