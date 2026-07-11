@@ -15,7 +15,9 @@ export function postUrl(lang: string | undefined, id: string) {
 	return getRelativeLocaleUrl(resolved, `/${postSegment[resolved]}/${id}/`);
 }
 
+// Tags have no dedicated page — this links to the post index with the tag
+// pre-selected, which PostFilters.astro's script applies on load.
 export function tagUrl(lang: string | undefined, tag: string) {
 	const resolved: Lang = lang && lang in ui ? (lang as Lang) : defaultLang;
-	return getRelativeLocaleUrl(resolved, `/tag/${tag}/`);
+	return `${getRelativeLocaleUrl(resolved, '/')}?tag=${encodeURIComponent(tag)}`;
 }

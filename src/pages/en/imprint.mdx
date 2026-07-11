@@ -1,0 +1,51 @@
+---
+layout: ../../layouts/BaseLayout.astro
+title: Legal Notice
+description: Legal notice (Impressum) for achis.blog.
+noindex: true
+---
+
+import {
+	CONTACT_NAME,
+	CONTACT_STREET,
+	CONTACT_CITY,
+	CONTACT_COUNTRY,
+	CONTACT_PHONE,
+	CONTACT_EMAIL,
+} from '../../consts';
+import { reverseText, encodeEmail } from '../../lib/contact';
+
+<article>
+	<header>
+		<h1>Legal Notice</h1>
+		<hr />
+	</header>
+	<div class="prose no-indent">
+
+_This is a non-binding English translation of the German [Impressum](/impressum), which is the legally binding version required under German law (§ 5 TMG)._
+
+<span class="r">{reverseText(CONTACT_NAME)}</span>
+<br />
+<span class="r">{reverseText(CONTACT_STREET)}</span>
+<br />
+<span class="r">{reverseText(CONTACT_CITY)}</span>
+<br />
+<span class="r">{reverseText(CONTACT_COUNTRY.en)}</span>
+
+**Phone:** <span class="r">{reverseText(CONTACT_PHONE)}</span><br />
+**Email:** <span class="r">{encodeEmail(CONTACT_EMAIL)}</span>
+
+---
+
+## License
+
+Unless otherwise noted, the content published on this website is licensed under [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-nc-sa/4.0/). The source code is licensed under the [MIT License](https://opensource.org/license/mit).
+
+---
+
+## Privacy
+
+Information on the processing of personal data can be found in the [Privacy Policy](/en/privacy-policy).
+
+	</div>
+</article>

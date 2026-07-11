@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import PostList from '../components/PostList.astro';
+import PostFilters from '../components/PostFilters.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE_TITLE } from '../consts';
 import { defaultLang } from '../i18n/ui';
@@ -15,34 +16,18 @@ const posts = (
 		({ data }) => (import.meta.env.DEV || !data.draft) && data.lang === lang,
 	)
 ).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
-
-const years = [...new Set(posts.map((p) => p.data.pubDate.getFullYear()))].sort((a, b) => b - a);
-
-const postsByYear = years.map((year) => ({
-	year,
-	posts: posts.filter((p) => p.data.pubDate.getFullYear() === year),
-}));
 ---
 
 <BaseLayout title={SITE_TITLE} description={t('index.description')}>
 	<h1 class="sr-only">{SITE_TITLE}</h1>
-	{postsByYear.length === 0 && <p>{t('index.empty')}</p>}
-	{postsByYear.map(({ year, posts }) => (
-		<section>
-			<h2 id={`year-${year}`}>{year}</h2>
-			<PostList {posts} />
-		</section>
-	))}
+	<PostFilters />
+	<div data-post-index>
+		{posts.length === 0 ? <p>{t('index.empty')}</p> : <PostList {posts} />}
+	</div>
 </BaseLayout>
 
 <style>
-	section {
-		margin-bottom: 2em;
-	}
-	section:first-of-type {
+	div {
 		margin-top: 1.5em;
-	}
-	h2 {
-		scroll-margin-top: 1em;
 	}
 </style>

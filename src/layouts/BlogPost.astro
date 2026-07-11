@@ -13,8 +13,8 @@ const t = useTranslations(lang);
 ---
 
 <BaseLayout title={title} description={description}>
-	<article data-pagefind-body>
-		<header class="post-header" data-pagefind-ignore>
+	<article>
+		<header class="post-header">
 			<h1>{title}</h1>
 			<p class="date">
 				<FormattedDate date={pubDate} />
@@ -25,12 +25,7 @@ const t = useTranslations(lang);
 			{tags && tags.length > 0 && (
 				<div class="tags">
 					{tags.map((tag) => (
-						<a
-							href={tagUrl(lang, tag)}
-							class="tag"
-							data-pagefind-filter="tag[data-tag-value]"
-							data-tag-value={tag}
-						>#{tag}</a>
+						<a href={tagUrl(lang, tag)} class="tag">#{tag}</a>
 					))}
 				</div>
 			)}

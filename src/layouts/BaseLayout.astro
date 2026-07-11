@@ -5,20 +5,28 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { defaultLang } from '../i18n/ui';
 
-interface Props {
+interface PageProps {
 	title: string;
 	description: string;
 	image?: ImageMetadata;
+	noindex?: boolean;
 }
 
-const { title, description, image } = Astro.props;
+// Used both as a regular component (props passed directly) and as an MDX/MD
+// `layout:` target, where Astro nests all frontmatter under `frontmatter`
+// instead of spreading it into Astro.props.
+interface Props extends PageProps {
+	frontmatter?: PageProps;
+}
+
+const { title, description, image, noindex } = Astro.props.frontmatter ?? Astro.props;
 const lang = Astro.currentLocale ?? defaultLang;
 ---
 
 <!doctype html>
 <html lang={lang}>
 	<head>
-		<BaseHead title={title} description={description} image={image} />
+		<BaseHead title={title} description={description} image={image} noindex={noindex} />
 	</head>
 	<body>
 		<Header />

@@ -109,6 +109,12 @@ p {
 	margin-top: 0.6em;
 }
 
+/* Legal pages (Impressum/Datenschutz) read better as flush-left paragraphs
+   rather than the indented, magazine-style body text used for posts. */
+.prose.no-indent > p {
+	text-indent: 0;
+}
+
 ul, ol {
 	padding-left: 1.5em;
 }
@@ -227,6 +233,13 @@ th, td {
 
 @media (max-width: 600px) {
 	main { padding: 1.5em 1em 3em; }
+}
+
+/* Scraper deterrent for contact details (Impressum/Datenschutz): text content
+   is reversed, then flipped back to normal reading order visually. */
+.r {
+	unicode-bidi: bidi-override;
+	direction: rtl;
 }
 
 .sr-only {

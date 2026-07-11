@@ -12,6 +12,7 @@ interface Props {
 	title: string;
 	description: string;
 	image?: ImageMetadata;
+	noindex?: boolean;
 }
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
@@ -19,7 +20,7 @@ const lang = Astro.currentLocale ?? defaultLang;
 const ogLocale = { de: 'de_DE', en: 'en_US' }[lang];
 const rssPath = lang === 'en' ? 'en/rss.xml' : 'rss.xml';
 
-const { title, description, image = FallbackImage } = Astro.props;
+const { title, description, image = FallbackImage, noindex = false } = Astro.props;
 ---
 
 <!-- Global Metadata -->
@@ -35,6 +36,7 @@ const { title, description, image = FallbackImage } = Astro.props;
 	href={new URL(rssPath, Astro.site)}
 />
 <meta name="generator" content={Astro.generator} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
 
 <Font cssVariable="--font-mono" preload />
 <Font cssVariable="--font-serif" />

@@ -23,8 +23,7 @@ const posts = defineCollection({
 
 const pages = defineCollection({
 	// Standalone content pages that aren't blog posts (e.g. the colophon) —
-	// no pubDate/tags, so they never show up in the blog listing, tag/year
-	// pages, RSS feed, or Pagefind search.
+	// no pubDate/tags, so they never show up in the blog listing or RSS feed.
 	loader: glob({ base: './src/content/pages', pattern: '**/*.{md,mdx}' }),
 	schema: z.object({
 		title: z.string(),

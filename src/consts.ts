@@ -6,3 +6,16 @@ export const SITE_DESCRIPTION = {
 	de: 'Gedanken, Notizen von unterwegs und aus dem Alltag.',
 	en: 'Thoughts and notes from everyday life and travels.',
 } as const;
+
+// Contact details for the Impressum and Datenschutzerklärung pages
+// (src/pages/impressum.mdx, src/pages/datenschutz.mdx, and their English
+// counterparts under src/pages/en/).
+export const CONTACT_NAME = 'Adrian Altner';
+export const CONTACT_STREET = 'Rudolf-Leonhard-Str. 31';
+export const CONTACT_CITY = '01097 Dresden';
+export const CONTACT_COUNTRY = {
+	de: 'Deutschland',
+	en: 'Germany',
+} as const;
+export const CONTACT_PHONE = '+49 156 78530420';
+export const CONTACT_EMAIL = 'adrian.altner@gmail.com';

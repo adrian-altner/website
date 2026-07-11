@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import FormattedDate from './FormattedDate.astro';
-import { postUrl, tagUrl } from '../i18n/utils';
+import { postUrl } from '../i18n/utils';
 
 interface Props {
 	posts: CollectionEntry<'posts'>[];
@@ -12,19 +12,11 @@ const { posts } = Astro.props;
 
 <ul>
 	{posts.map((post) => (
-		<li>
+		<li data-tags={(post.data.tags ?? []).join(',')} data-year={post.data.pubDate.getFullYear()}>
+			<span class="date"><FormattedDate date={post.data.pubDate} iso /></span>
 			<div class="post-meta">
 				<a href={postUrl(post.data.lang, post.id)} class="post-title">{post.data.title}</a>
-				<p class="post-desc">{post.data.description}</p>
-				{post.data.tags && post.data.tags.length > 0 && (
-					<div class="tags">
-						{post.data.tags.map((tag) => (
-							<a href={tagUrl(post.data.lang, tag)} class="tag">#{tag}</a>
-						))}
-					</div>
-				)}
 			</div>
-			<span class="date"><FormattedDate date={post.data.pubDate} iso /></span>
 		</li>
 	))}
 </ul>
@@ -37,40 +29,25 @@ const { posts } = Astro.props;
 	}
 	li {
 		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 3em;
-		padding: 0.6em 0;
-		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 1em;
+		padding: 0.5em 0;
+	}
+	li[hidden] {
+		display: none;
 	}
 	.post-meta {
 		flex: 1;
+		min-width: 0;
 	}
 	.post-title {
 		font-weight: bold;
 	}
-	.post-desc {
-		color: var(--muted);
-		font-size: 0.9em;
-		margin: 0.1em 0 0;
-	}
-	.tags {
-		display: flex;
-		gap: 0.5em;
-		flex-wrap: wrap;
-		margin-top: 0.3em;
-	}
-	.tag {
-		font-size: 0.8em;
-		color: var(--muted);
-		text-decoration: none;
-	}
-	.tag:hover {
-		color: var(--accent);
-	}
 	.date {
 		color: var(--muted);
 		font-size: 0.9em;
+		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
+		flex-shrink: 0;
 	}
 </style>
