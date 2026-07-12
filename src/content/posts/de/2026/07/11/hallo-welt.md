@@ -8,6 +8,8 @@ translationId: '/en/2026/07/11/hello-world.md'
 
 Hier sammle ich Gedanken, Notizen von unterwegs und aus dem Alltag: mal ein technisches Thema, mal etwas Persönliches, ohne festen Rhythmus und ohne Anspruch auf Vollständigkeit.
 
-Wer stöbern möchte, findet über die Tags am Anfang der Beitragsübersicht schnell verwandte Beiträge. Oder du abonnierst den RSS-Feed, um nichts zu verpassen.
+Mit der Zeit kommen sicher mehr Beiträge dazu, über die Tags am Anfang der Beitragsübersicht lassen sich dann verwandte Themen leicht wiederfinden. 
+
+Wer automatisch benachrichtigt werden möchte, kann den RSS-Feed abonnieren.
 
 Schön, dass du hier bist.
