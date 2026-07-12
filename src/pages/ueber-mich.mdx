@@ -1,0 +1,33 @@
+import MePhoto from '@/assets/images/about/me.jpg';
+import Layout from '@/layouts/BlogPost.astro';
+
+{/* TODO: placeholder scaffold, not real content — fill in each section below
+(see en/about-me.mdx for the English version, same TODO applies there). */}
+
+<Layout
+	title="About Me"
+	description="Lorem ipsum dolor sit amet"
+	pubDate={new Date('August 08 2021')}
+	heroImage={MePhoto}
+	draft={false}
+	lang="de"
+	translationHref="/en/about-me"
+>
+
+## Wer ich bin
+
+*(Platzhalter: kurze Vorstellung — wer du bist, was dich ausmacht, warum es diesen Blog gibt.)*
+
+## Was ich mache
+
+*(Platzhalter: beruflicher Hintergrund oder aktuelle Projekte, sofern relevant.)*
+
+## Womit ich mich sonst beschäftige
+
+*(Platzhalter: Hobbys, Interessen, Themen, die dich neben dem Blog beschäftigen.)*
+
+## Kontakt
+
+Die schnellste Möglichkeit, mich zu erreichen, ist per E-Mail — die Adresse findest du im [Impressum](/impressum).
+
+</Layout>

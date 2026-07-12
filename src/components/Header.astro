@@ -19,7 +19,7 @@ const t = useTranslations(lang);
 // request URL, so nav highlighting works without any client-side JS.
 const currentPath = Astro.url.pathname;
 const postsHref = getRelativeLocaleUrl(lang, '/');
-const aboutHref = '/ueber-mich';
+const aboutHref = lang === 'en' ? '/en/about-me' : '/ueber-mich';
 const isPostsActive = currentPath === postsHref;
 const isAboutActive = currentPath === aboutHref || currentPath.startsWith(aboutHref);
 ---

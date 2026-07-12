@@ -10,6 +10,15 @@ export function useTranslations(lang: string | undefined) {
 	};
 }
 
+// Extracts the filename (without extension) from a content-relative path,
+// e.g. '/de/2026/07/11/hallo-welt.md' → 'hallo-welt'. Content collection ids
+// are always just this bare filename regardless of directory depth (see
+// generateId in content.config.ts) — this is also how a translationId path
+// gets resolved back into an actual post id for URL building.
+export function filenameFromPath(path: string) {
+	return path.split('/').pop()!.replace(/\.(md|mdx)$/, '');
+}
+
 export function postUrl(lang: string | undefined, id: string) {
 	const resolved: Lang = lang && lang in ui ? (lang as Lang) : defaultLang;
 	return getRelativeLocaleUrl(resolved, `/${postSegment[resolved]}/${id}/`);

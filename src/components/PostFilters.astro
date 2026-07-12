@@ -31,7 +31,7 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 	(years.length > 0 || tags.length > 0) && (
 		<div class="post-filters">
 			{years.length > 0 && (
-				<ul class="filter-menu">
+				<ul class="filter-menu year-menu">
 					{years.map(([year, count]) => (
 						<li>
 							{/* Years have no dedicated static page (unlike tags), so this is a
@@ -67,8 +67,17 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 			<div class="filter-status" hidden>
 				<p class="status-line">
 					<span class="status-label">{t('filters.filteringFor')}</span>
-					<button type="button" class="chip" data-remove="year" hidden />
-					<span class="tag-chips" />
+					{/* Grouped and labeled separately so it reads as "Jahr: 2018 ×, und
+					   Tag: #test ×" instead of one flat run of chips. */}
+					<span class="filter-group year-group" hidden>
+						<span class="group-label">{t('filters.year')}</span>
+						<button type="button" class="chip" data-remove="year" />
+					</span>
+					<span class="group-connector" hidden>, {t('filters.and')}</span>
+					<span class="filter-group tag-group" hidden>
+						<span class="group-label">{t('filters.tag')}</span>
+						<span class="tag-chips" />
+					</span>
 				</p>
 				<button type="button" class="reset">{t('filters.reset')}</button>
 			</div>
@@ -82,7 +91,9 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 		flex-direction: column;
 		gap: 0.4em;
 		margin-top: 1em;
-		padding-bottom: 1em;
+		padding-top: 0.5em;
+		padding-bottom: 0.5em;
+		border-top: 1px solid var(--border);
 		border-bottom: 1px solid var(--border);
 	}
 	.filter-menu {
@@ -92,10 +103,16 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 		margin: 0;
 		padding: 0;
 		list-style: none;
+		font-size: 0.85em;
+		line-height: 1.3;
+	}
+	.year-menu {
+		padding-left: 0.8em;
 	}
 	.tags-menu {
 		overflow: hidden;
 		transition: max-height 0.2s ease;
+		padding-left: 0.8em;
 	}
 	a,
 	.filter-menu button {
@@ -104,9 +121,9 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 		background: none;
 		border: none;
 		padding: 0;
-		font-size: 0.85em;
 		text-decoration: none;
 		cursor: pointer;
+		vertical-align: top;
 	}
 	a:hover,
 	.filter-menu button:hover {
@@ -130,7 +147,7 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 		color: var(--muted);
 		background: none;
 		border: none;
-		padding: 0;
+		padding: 0 0 0 0.8em;
 		cursor: pointer;
 	}
 	.toggle-tags[hidden] {
@@ -169,6 +186,25 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 	}
 	.status-label {
 		color: var(--muted);
+	}
+	.filter-group {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.3em;
+	}
+	.filter-group[hidden] {
+		display: none;
+	}
+	.group-label {
+		color: var(--muted);
+	}
+	.group-connector {
+		color: var(--muted);
+		margin-left: -0.5em;
+	}
+	.group-connector[hidden] {
+		display: none;
 	}
 	.tag-chips {
 		display: flex;
@@ -212,6 +248,9 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 	const tagMenuEl = document.querySelector<HTMLElement>('.tags-menu');
 	const statusEl = document.querySelector<HTMLElement>('.filter-status');
 	const yearChip = document.querySelector<HTMLButtonElement>('.chip[data-remove="year"]');
+	const yearGroupEl = document.querySelector<HTMLElement>('.year-group');
+	const tagGroupEl = document.querySelector<HTMLElement>('.tag-group');
+	const groupConnectorEl = document.querySelector<HTMLElement>('.group-connector');
 	const tagChipsEl = document.querySelector<HTMLElement>('.tag-chips');
 	const resetBtn = document.querySelector<HTMLButtonElement>('.reset');
 	const toggleTagsBtn = document.querySelector<HTMLButtonElement>('.toggle-tags');
@@ -220,6 +259,9 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 		indexRoot &&
 		statusEl &&
 		yearChip &&
+		yearGroupEl &&
+		tagGroupEl &&
+		groupConnectorEl &&
 		tagChipsEl &&
 		resetBtn &&
 		toggleTagsBtn &&
@@ -285,6 +327,45 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 			applyTagVisibility();
 		}
 
+		// Counts posts in a specific year matching every tag in `tags` — like
+		// countMatches() above, but for a literal year rather than whichever
+		// one is currently active, so it can be used to check every year
+		// button regardless of which (if any) is selected.
+		function countMatchesForYear(year: string, tags: string[]) {
+			let count = 0;
+			indexRoot?.querySelectorAll('li[data-tags][data-year]').forEach((li) => {
+				if (li.getAttribute('data-year') !== year) return;
+				const liTags = (li.getAttribute('data-tags') || '').split(',').filter(Boolean);
+				if (tags.every((tag) => liTags.includes(tag))) count++;
+			});
+			return count;
+		}
+
+		// Narrows the year list the same way updateTagAvailability() narrows
+		// tags: hides years with zero matches for the active tags and updates
+		// their counts. If the active tags would strand the active year at
+		// zero results, clear it first — the reverse-direction counterpart
+		// to pruneInvalidActiveTags().
+		function updateYearAvailability() {
+			if (activeYear && countMatchesForYear(activeYear, [...activeTags]) === 0) {
+				activeYear = null;
+			}
+
+			yearButtons.forEach((btn) => {
+				const year = btn.getAttribute('data-year') as string;
+				const count = countMatchesForYear(year, [...activeTags]);
+				const li = btn.closest('li');
+				if (li) (li as HTMLElement).hidden = count === 0 && year !== activeYear;
+				const countEl = btn.querySelector('.count');
+				if (countEl) countEl.textContent = `(${count})`;
+			});
+		}
+
+		function updateAvailability() {
+			updateTagAvailability();
+			updateYearAvailability();
+		}
+
 		// Hides narrowed-out tags, then clips the remaining ones to
 		// TAG_VISIBLE_LINES worth of height — measured from an actual
 		// rendered row rather than a fixed item count, so the cutoff tracks
@@ -333,7 +414,7 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 				link.classList.toggle('active', activeTags.has(link.getAttribute('data-tag') as string));
 			});
 
-			yearChip!.hidden = !activeYear;
+			yearGroupEl!.hidden = !activeYear;
 			if (activeYear) yearChip!.textContent = `${activeYear} ×`;
 
 			tagChipsEl!.innerHTML = '';
@@ -343,17 +424,18 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 				// a freshly created element wouldn't have that class and would
 				// silently fall back to unstyled default button chrome.
 				const chip = yearChip!.cloneNode(false) as HTMLButtonElement;
-				chip.hidden = false;
 				chip.removeAttribute('data-remove');
 				chip.textContent = `#${tag} ×`;
 				chip.addEventListener('click', () => {
 					activeTags.delete(tag);
-					updateTagAvailability();
+					updateAvailability();
 					applyFilter();
 					updateUrl();
 				});
 				tagChipsEl!.appendChild(chip);
 			});
+			tagGroupEl!.hidden = activeTags.size === 0;
+			groupConnectorEl!.hidden = !(activeYear && activeTags.size > 0);
 
 			statusEl!.hidden = !activeYear && activeTags.size === 0;
 		}
@@ -372,7 +454,7 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 			btn.addEventListener('click', () => {
 				const year = btn.getAttribute('data-year');
 				activeYear = activeYear === year ? null : year;
-				updateTagAvailability();
+				updateAvailability();
 				applyFilter();
 				updateUrl();
 			});
@@ -384,7 +466,7 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 				const tag = link.getAttribute('data-tag') as string;
 				if (activeTags.has(tag)) activeTags.delete(tag);
 				else activeTags.add(tag);
-				updateTagAvailability();
+				updateAvailability();
 				applyFilter();
 				updateUrl();
 			});
@@ -392,7 +474,7 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 
 		yearChip.addEventListener('click', () => {
 			activeYear = null;
-			updateTagAvailability();
+			updateAvailability();
 			applyFilter();
 			updateUrl();
 		});
@@ -400,7 +482,7 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 		resetBtn.addEventListener('click', () => {
 			activeYear = null;
 			activeTags.clear();
-			updateTagAvailability();
+			updateAvailability();
 			applyFilter();
 			updateUrl();
 		});
@@ -420,7 +502,7 @@ const years = [...yearCounts.entries()].sort((a, b) => b[0] - a[0]);
 
 		// Always run once to establish the collapsed tag view, independent of
 		// whether a filter happens to be active on load.
-		updateTagAvailability();
+		updateAvailability();
 		if (activeYear || activeTags.size > 0) {
 			applyFilter();
 			updateUrl();

@@ -4,7 +4,7 @@ description: 'The first post on achis.blog — what this space is for.'
 pubDate: 'Jul 11 2026'
 tags: ['meta']
 lang: 'en'
-translationId: 'hallo-welt'
+translationId: '/de/2026/07/11/hallo-welt.md'
 ---
 
 Hello World.

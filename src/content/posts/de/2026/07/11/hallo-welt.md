@@ -3,7 +3,7 @@ title: 'Hallo Welt'
 description: 'Der erste Beitrag auf achis.blog — worum es hier gehen soll.'
 pubDate: 'Jul 11 2026'
 tags: ['meta']
-translationId: 'hello-world'
+translationId: '/en/2026/07/11/hello-world.md'
 ---
 
 Hallo Welt.

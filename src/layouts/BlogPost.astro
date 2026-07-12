@@ -1,21 +1,41 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { defaultLang } from '@/i18n/ui';
-import { formatDate, postUrl, tagUrl, useTranslations } from '@/i18n/utils';
+import { defaultLang, languages } from '@/i18n/ui';
+import { filenameFromPath, formatDate, postUrl, tagUrl, useTranslations } from '@/i18n/utils';
 
-type Props = CollectionEntry<'posts'>['data'];
+// Standalone pages (e.g. ueber-mich.astro) reuse this layout outside the
+// 'posts' collection and don't have a translationId to resolve — they pass
+// a translationHref directly instead, which takes precedence when present.
+type Props = CollectionEntry<'posts'>['data'] & { translationHref?: string };
 
-const { title, description, pubDate, updatedDate, tags, lang: postLang, translationId } =
-	Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	tags,
+	lang: postLang,
+	translationId,
+	translationHref: translationHrefOverride,
+	heroImage,
+} = Astro.props;
 const lang = Astro.currentLocale ?? postLang ?? defaultLang;
 const t = useTranslations(lang);
-const translationHref = translationId ? postUrl(lang === 'en' ? 'de' : 'en', translationId) : undefined;
+const otherLang = lang === 'en' ? 'de' : 'en';
+const translationHref =
+	translationHrefOverride ??
+	(translationId ? postUrl(otherLang, filenameFromPath(translationId)) : undefined);
+// The hint is written in the target language, not the current page's —
+// a reader who only speaks that language needs to understand it to switch.
+const tOther = useTranslations(otherLang);
 ---
 
 <BaseLayout title={title} description={description} translationHref={translationHref}>
 	<article>
 		<header class="post-header">
+			{heroImage && <Image src={heroImage} width={240} alt={title} class="hero-image" />}
 			<h1>{title}</h1>
 			<p class="date">
 				<time datetime={pubDate.toISOString()}>{formatDate(pubDate, lang)}</time>
@@ -34,7 +54,18 @@ const translationHref = translationId ? postUrl(lang === 'en' ? 'de' : 'en', tra
 					))}
 				</div>
 			)}
-			<hr />
+			<div class="divider">
+				<hr />
+				{translationHref && (
+					<a
+						href={translationHref}
+						class="translation-hint"
+						aria-label={`${tOther('post.alsoAvailable')} ${languages[otherLang]}`}
+					>
+						{languages[otherLang]} →
+					</a>
+				)}
+			</div>
 		</header>
 		<div class="prose">
 			<slot />
@@ -49,6 +80,15 @@ const translationHref = translationId ? postUrl(lang === 'en' ? 'de' : 'en', tra
 	.post-header h1 {
 		font-size: 1.6em;
 		margin-bottom: 0.2em;
+	}
+	.hero-image {
+		display: block;
+		width: 100%;
+		max-width: 240px;
+		height: auto;
+		margin: 0 0 1em;
+		border-radius: 8px;
+		box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 	}
 	.date {
 		color: var(--muted);
@@ -71,5 +111,26 @@ const translationHref = translationId ? postUrl(lang === 'en' ? 'de' : 'en', tra
 	}
 	.tag:hover {
 		color: var(--accent);
+	}
+	.divider {
+		display: flex;
+		align-items: center;
+		gap: 0.8em;
+		margin: 1.5em 0;
+	}
+	.divider hr {
+		flex: 1;
+		margin: 0;
+	}
+	.translation-hint {
+		font-size: 0.8em;
+		color: var(--muted);
+		text-decoration: none;
+		white-space: nowrap;
+		opacity: 0.7;
+	}
+	.translation-hint:hover {
+		color: var(--accent);
+		opacity: 1;
 	}
 </style>
