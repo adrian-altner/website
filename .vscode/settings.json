@@ -1,0 +1,40 @@
+{
+  // Markdown/MDX: Zeilen umbrechen statt seitlich scrollen
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+  "[mdx]": {
+    "editor.wordWrap": "on"
+  },
+  "editor.wordWrapColumn": 100,
+
+  // Astro
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
+  },
+  "files.associations": {
+    "*.mdx": "mdx"
+  },
+
+  // Allgemein etwas angenehmer
+  "editor.formatOnSave": true,
+  "editor.rulers": [100],
+  "editor.renderWhitespace": "boundary",
+  "editor.minimap.enabled": false,
+  "explorer.compactFolders": false,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "search.exclude": {
+    "dist": true,
+    ".astro": true
+  },
+  "files.exclude": {
+    "**/.DS_Store": true
+  }
+}
