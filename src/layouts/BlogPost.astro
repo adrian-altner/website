@@ -13,6 +13,9 @@ type Props = CollectionEntry<'posts'>['data'] & {
 	// 'profile' puts the hero image beside the title with a blob-shaped crop,
 	// for standalone about-me style pages rather than regular posts.
 	heroLayout?: 'default' | 'profile';
+	// A word/phrase within the profile intro (description) to underline.
+	// Only affects the on-page intro, not the <meta description> value.
+	introHighlight?: string;
 };
 
 const {
@@ -26,6 +29,7 @@ const {
 	translationHref: translationHrefOverride,
 	heroImage,
 	heroLayout = 'default',
+	introHighlight,
 } = Astro.props;
 const lang = Astro.currentLocale ?? postLang ?? defaultLang;
 const t = useTranslations(lang);
@@ -47,12 +51,25 @@ const tOther = useTranslations(otherLang);
 					<h1 class:list={[heroLayout === 'profile' && 'sr-only']}>{title}</h1>
 					{heroLayout === 'profile' && (
 						<p class="intro">
-							{description.split('\n').map((line, i) => (
-								<>
-									{i > 0 && <br />}
-									<span class:list={[i > 0 && 'intro-sub']}>{line}</span>
-								</>
-							))}
+							{description.split('\n').map((line, i) => {
+								const idx = introHighlight ? line.indexOf(introHighlight) : -1;
+								return (
+									<>
+										{i > 0 && <br />}
+										<span class:list={[i > 0 && 'intro-sub']}>
+											{idx === -1 ? (
+												line
+											) : (
+												<>
+													{line.slice(0, idx)}
+													<u>{introHighlight}</u>
+													{line.slice(idx + introHighlight!.length)}
+												</>
+											)}
+										</span>
+									</>
+								);
+							})}
 						</p>
 					)}
 					{heroLayout !== 'profile' && (
@@ -148,6 +165,11 @@ const tOther = useTranslations(otherLang);
 	.intro-sub {
 		font-weight: 350;
 		font-size: 0.85em;
+	}
+	.intro u {
+		text-decoration: underline;
+		text-decoration-color: var(--accent);
+		text-underline-offset: 0.15em;
 	}
 	.date {
 		color: var(--muted);
