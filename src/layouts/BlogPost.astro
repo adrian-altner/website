@@ -2,14 +2,9 @@
 import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { defaultLang, languages } from '@/i18n/ui';
-import { filenameFromPath, formatDate, postUrl, tagUrl, useTranslations } from '@/i18n/utils';
+import { formatDate } from '@/lib/format';
 
-// Standalone pages (e.g. ueber-mich.astro) reuse this layout outside the
-// 'posts' collection and don't have a translationId to resolve — they pass
-// a translationHref directly instead, which takes precedence when present.
 type Props = CollectionEntry<'posts'>['data'] & {
-	translationHref?: string;
 	// 'profile' puts the hero image beside the title with a blob-shaped crop,
 	// for standalone about-me style pages rather than regular posts.
 	heroLayout?: 'default' | 'profile';
@@ -24,25 +19,13 @@ const {
 	pubDate,
 	updatedDate,
 	tags,
-	lang: postLang,
-	translationId,
-	translationHref: translationHrefOverride,
 	heroImage,
 	heroLayout = 'default',
 	introHighlight,
 } = Astro.props;
-const lang = Astro.currentLocale ?? postLang ?? defaultLang;
-const t = useTranslations(lang);
-const otherLang = lang === 'en' ? 'de' : 'en';
-const translationHref =
-	translationHrefOverride ??
-	(translationId ? postUrl(otherLang, filenameFromPath(translationId)) : undefined);
-// The hint is written in the target language, not the current page's —
-// a reader who only speaks that language needs to understand it to switch.
-const tOther = useTranslations(otherLang);
 ---
 
-<BaseLayout title={title} description={description} translationHref={translationHref}>
+<BaseLayout title={title} description={description}>
 	<article>
 		<header class:list={['post-header', heroLayout === 'profile' && 'post-header--profile']}>
 			<div class="post-header-top">
@@ -74,37 +57,24 @@ const tOther = useTranslations(otherLang);
 					)}
 					{heroLayout !== 'profile' && (
 						<p class="date">
-							<time datetime={pubDate.toISOString()}>{formatDate(pubDate, lang)}</time>
+							<time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
 							{updatedDate && (
 								<span class="updated">
 									{' '}
-									· {t('post.updated')}{' '}
-									<time datetime={updatedDate.toISOString()}>{formatDate(updatedDate, lang)}</time>
+									· aktualisiert{' '}
+									<time datetime={updatedDate.toISOString()}>{formatDate(updatedDate)}</time>
 								</span>
 							)}
 						</p>
 					)}
 					{tags && tags.length > 0 && (
 						<div class="tags">
-							{tags.map((tag) => (
-								<a href={tagUrl(lang, tag)} class="tag">#{tag}</a>
-							))}
+							{tags.map((tag) => <span class="tag">#{tag}</span>)}
 						</div>
 					)}
 				</div>
 			</div>
-			<div class="divider">
-				<hr />
-				{translationHref && (
-					<a
-						href={translationHref}
-						class="translation-hint"
-						aria-label={`${tOther('post.alsoAvailable')} ${languages[otherLang]}`}
-					>
-						{languages[otherLang]} →
-					</a>
-				)}
-			</div>
+			<hr class="divider" />
 		</header>
 		<div class="prose">
 			<slot />
@@ -188,30 +158,8 @@ const tOther = useTranslations(otherLang);
 	.tag {
 		font-size: 0.85em;
 		color: var(--muted);
-		text-decoration: none;
-	}
-	.tag:hover {
-		color: var(--accent);
 	}
 	.divider {
-		display: flex;
-		align-items: center;
-		gap: 0.8em;
 		margin: 1.5em 0;
-	}
-	.divider hr {
-		flex: 1;
-		margin: 0;
-	}
-	.translation-hint {
-		font-size: 0.8em;
-		color: var(--muted);
-		text-decoration: none;
-		white-space: nowrap;
-		opacity: 0.7;
-	}
-	.translation-hint:hover {
-		color: var(--accent);
-		opacity: 1;
 	}
 </style>

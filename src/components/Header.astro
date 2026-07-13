@@ -1,56 +1,34 @@
 ---
-import { getRelativeLocaleUrl } from 'astro:i18n';
 import { SITE_TITLE } from '@/consts';
-import { defaultLang, languages } from '@/i18n/ui';
-import { useTranslations } from '@/i18n/utils';
-
-interface Props {
-	// URL of this page's translation in the other language, if one exists —
-	// used by the language switcher instead of the homepage fallback.
-	translationHref?: string;
-}
-
-const { translationHref } = Astro.props;
-const lang = Astro.currentLocale ?? defaultLang;
-const t = useTranslations(lang);
 
 // Active-link detection (formerly HeaderLink.astro, inlined here since it's
 // the only place it was used): computed server-side from the current
 // request URL, so nav highlighting works without any client-side JS.
 const currentPath = Astro.url.pathname;
-const postsHref = getRelativeLocaleUrl(lang, '/');
-const aboutHref = lang === 'en' ? '/en/about-me' : '/ueber-mich';
+const postsHref = '/';
+const aboutHref = '/ueber-mich';
 const isPostsActive = currentPath === postsHref;
 const isAboutActive = currentPath === aboutHref || currentPath.startsWith(aboutHref);
 ---
 
 <header>
 	<div class="header-top">
-		<a class="site-title" href={getRelativeLocaleUrl(lang, '/')}>{SITE_TITLE}</a>
+		<a class="site-title" href="/">{SITE_TITLE}</a>
 		<nav>
 			<a
 				href={postsHref}
 				class:list={{ active: isPostsActive }}
 				aria-current={isPostsActive ? 'page' : undefined}
 			>
-				{t('nav.posts')}
+				Beiträge
 			</a>
 			<a
 				href={aboutHref}
 				class:list={{ active: isAboutActive }}
 				aria-current={isAboutActive ? 'page' : undefined}
 			>
-				{t('nav.about')}
+				Über mich
 			</a>
-			<span class="lang-switch">
-				{Object.keys(languages).map((code) =>
-					code === lang ? (
-						<span class="lang-current" aria-current="true">{code.toUpperCase()}</span>
-					) : (
-						<a href={translationHref ?? getRelativeLocaleUrl(code, '/')}>{code.toUpperCase()}</a>
-					),
-				)}
-			</span>
 		</nav>
 	</div>
 </header>
@@ -99,24 +77,5 @@ const isAboutActive = currentPath === aboutHref || currentPath.startsWith(aboutH
 	nav a.active {
 		color: var(--accent-hover);
 		font-weight: bold;
-	}
-	.lang-switch {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4em;
-		padding-left: 0.6em;
-		border-left: 1px solid var(--border);
-		font-size: 0.85em;
-	}
-	.lang-switch a {
-		text-decoration: none;
-		color: var(--muted);
-	}
-	.lang-switch a:hover {
-		color: var(--accent);
-	}
-	.lang-current {
-		font-weight: bold;
-		color: var(--text);
 	}
 </style>

@@ -3,13 +3,10 @@ import rss from '@astrojs/rss';
 import { SITE_DESCRIPTION, SITE_TITLE } from '@/consts';
 
 export async function GET(context) {
-	const posts = await getCollection(
-		'posts',
-		({ data }) => (import.meta.env.DEV || !data.draft) && data.lang === 'de',
-	);
+	const posts = await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
 	return rss({
 		title: SITE_TITLE,
-		description: SITE_DESCRIPTION.de,
+		description: SITE_DESCRIPTION,
 		site: context.site,
 		items: posts.map((post) => ({
 			...post.data,

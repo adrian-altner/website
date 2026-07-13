@@ -2,7 +2,6 @@
 layout: "@/layouts/BaseLayout.astro"
 title: Impressum
 description: Rechtliche Hinweise für achis.blog.
-translationHref: /en/imprint
 ---
 
 import {
@@ -30,7 +29,7 @@ import { reverseText, encodeEmail } from '../lib/contact';
 <br />
 <span class="r">{reverseText(CONTACT_CITY)}</span>
 <br />
-<span class="r">{reverseText(CONTACT_COUNTRY.de)}</span>
+<span class="r">{reverseText(CONTACT_COUNTRY)}</span>
 
 **Telefon:** <span class="r">{reverseText(CONTACT_PHONE)}</span><br />
 **E-Mail:** <span class="r">{encodeEmail(CONTACT_EMAIL)}</span>

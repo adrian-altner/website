@@ -1,26 +1,24 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { defaultLang } from '@/i18n/ui';
-import { formatDate, postUrl } from '@/i18n/utils';
+import { formatDate, postUrl } from '@/lib/format';
 
 interface Props {
 	posts: CollectionEntry<'posts'>[];
 }
 
 const { posts } = Astro.props;
-const lang = Astro.currentLocale ?? defaultLang;
 ---
 
 <ul>
 	{posts.map((post) => (
-		<li data-tags={(post.data.tags ?? []).join(',')} data-year={post.data.pubDate.getFullYear()}>
+		<li>
 			<span class="date">
 				<time datetime={post.data.pubDate.toISOString()}>
-					{formatDate(post.data.pubDate, lang, { iso: true })}
+					{formatDate(post.data.pubDate, { iso: true })}
 				</time>
 			</span>
 			<div class="post-meta">
-				<a href={postUrl(post.data.lang, post.id)} class="post-title">{post.data.title}</a>
+				<a href={postUrl(post.id)} class="post-title">{post.data.title}</a>
 			</div>
 		</li>
 	))}
@@ -37,9 +35,6 @@ const lang = Astro.currentLocale ?? defaultLang;
 		align-items: baseline;
 		gap: 1em;
 		padding: 0.5em 0;
-	}
-	li[hidden] {
-		display: none;
 	}
 	.post-meta {
 		flex: 1;
