@@ -1,23 +1,27 @@
 ---
-import { getCollection } from 'astro:content';
-import PostList from '@/components/PostList.astro';
+import { getCollection, render } from 'astro:content';
+import PostArticle from '@/components/PostArticle.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { SITE_TITLE } from '@/consts';
 
 const posts = (
 	await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft)
 ).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const renderedPosts = await Promise.all(
+	posts.map(async (post) => ({ post, Content: (await render(post)).Content })),
+);
 ---
 
 <BaseLayout title={SITE_TITLE} description="Alle Beiträge">
 	<h1 class="sr-only">{SITE_TITLE}</h1>
-	<div>
-		{posts.length === 0 ? <p>Noch keine Beiträge.</p> : <PostList {posts} />}
-	</div>
+	{posts.length === 0 ? (
+		<p>Noch keine Beiträge.</p>
+	) : (
+		renderedPosts.map(({ post, Content }) => (
+			<PostArticle {...post.data}>
+				<Content />
+			</PostArticle>
+		))
+	)}
 </BaseLayout>
-
-<style>
-	div {
-		margin-top: 1.5em;
-	}
-</style>

@@ -1,6 +1,6 @@
 // Formats a date for display — either a locale-aware "19. Jun. 2024" style
 // string, or a fixed ISO "2024-06-19" (`iso: true`, used for the compact
-// tabular-nums date column in PostList.astro). Callers wrap the result in
+// tabular-nums date column in the post index). Callers wrap the result in
 // their own <time datetime={date.toISOString()}> for the semantic markup.
 export function formatDate(date: Date, options?: { iso?: boolean }) {
 	if (options?.iso) {

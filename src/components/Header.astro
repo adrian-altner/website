@@ -1,36 +1,9 @@
 ---
 import { SITE_TITLE } from '@/consts';
-
-// Active-link detection (formerly HeaderLink.astro, inlined here since it's
-// the only place it was used): computed server-side from the current
-// request URL, so nav highlighting works without any client-side JS.
-const currentPath = Astro.url.pathname;
-const postsHref = '/';
-const aboutHref = '/ueber-mich';
-const isPostsActive = currentPath === postsHref;
-const isAboutActive = currentPath === aboutHref || currentPath.startsWith(aboutHref);
 ---
 
 <header>
-	<div class="header-top">
-		<a class="site-title" href="/">{SITE_TITLE}</a>
-		<nav>
-			<a
-				href={postsHref}
-				class:list={{ active: isPostsActive }}
-				aria-current={isPostsActive ? 'page' : undefined}
-			>
-				Beiträge
-			</a>
-			<a
-				href={aboutHref}
-				class:list={{ active: isAboutActive }}
-				aria-current={isAboutActive ? 'page' : undefined}
-			>
-				Über mich
-			</a>
-		</nav>
-	</div>
+	<a class="site-title" href="/">{SITE_TITLE}</a>
 </header>
 
 <style>
@@ -39,13 +12,6 @@ const isAboutActive = currentPath === aboutHref || currentPath.startsWith(aboutH
 		max-width: 100%;
 		margin: 0 auto;
 		padding: 2em 1em 0;
-	}
-	.header-top {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		gap: 0.3em 1em;
 	}
 	.site-title {
 		font-size: 1.4em;
@@ -56,26 +22,5 @@ const isAboutActive = currentPath === aboutHref || currentPath.startsWith(aboutH
 	}
 	.site-title:hover {
 		color: var(--accent);
-	}
-	nav {
-		display: flex;
-		align-items: center;
-		gap: 1em;
-		flex-wrap: wrap;
-		font-family: var(--font-heading), system-ui, sans-serif;
-	}
-	nav a {
-		display: inline-block;
-		padding: 0.3em 0;
-		color: var(--accent);
-		text-decoration: underline;
-		font-size: 0.95em;
-	}
-	nav a:hover {
-		color: var(--accent-hover);
-	}
-	nav a.active {
-		color: var(--accent-hover);
-		font-weight: bold;
 	}
 </style>
