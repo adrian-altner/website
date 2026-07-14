@@ -1,0 +1,26 @@
+---
+import type { GetStaticPaths } from 'astro';
+import PostList from '@/components/PostList.astro';
+import Pagination from '@/components/Pagination.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { SITE_TITLE, POSTS_PER_PAGE } from '@/consts';
+import { getSortedPosts } from '@/lib/posts';
+
+export const getStaticPaths = (async ({ paginate }) => {
+	const posts = await getSortedPosts();
+	// Page 1 is served from `/` (see src/pages/index.astro) — drop it here so
+	// we don't also build a duplicate `/seite/1`.
+	return paginate(posts, { pageSize: POSTS_PER_PAGE }).filter((p) => p.params.page !== '1');
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+// `paginate()` computes page 1's URL as `/seite/1`, since it doesn't know
+// that page actually lives at `/`.
+const prevUrl = page.currentPage === 2 ? '/' : page.url.prev;
+---
+
+<BaseLayout title={`${SITE_TITLE} — Seite ${page.currentPage}`} description="Alle Beiträge">
+	<h1 class="sr-only">{SITE_TITLE}</h1>
+	<PostList posts={page.data} />
+	<Pagination prevUrl={prevUrl} nextUrl={page.url.next} />
+</BaseLayout>

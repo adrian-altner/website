@@ -15,6 +15,9 @@ export default defineConfig({
 			provider: fontProviders.local(),
 			name: 'Inter',
 			cssVariable: '--font-sans',
+			// Never swap fonts mid-render (e.g. right after a full-page navigation) —
+			// avoids the visible layout jump when the webfont finishes loading.
+			display: 'optional',
 			options: {
 				variants: [
 					{ weight: '100 900', style: 'normal', src: ['./src/assets/fonts/InterVariable.woff2'] },
@@ -30,6 +33,7 @@ export default defineConfig({
 			provider: fontProviders.local(),
 			name: 'Bricolage Grotesque',
 			cssVariable: '--font-heading',
+			display: 'optional',
 			options: {
 				variants: [
 					{
@@ -44,6 +48,7 @@ export default defineConfig({
 			provider: fontProviders.local(),
 			name: 'Maple Mono',
 			cssVariable: '--font-mono',
+			display: 'optional',
 			options: {
 				variants: [
 					{

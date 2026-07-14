@@ -3,6 +3,7 @@
 
 export const SITE_TITLE = 'achis.blog';
 export const SITE_DESCRIPTION = 'Gedanken, Notizen von unterwegs und aus dem Alltag.';
+export const POSTS_PER_PAGE = 3;
 
 // Contact details for the Impressum and Datenschutzerklärung pages
 // (src/pages/impressum.mdx, src/pages/datenschutz.mdx).

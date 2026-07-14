@@ -1,0 +1,40 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import PostArticle from '@/components/PostArticle.astro';
+
+interface Props {
+	posts: CollectionEntry<'posts'>[];
+}
+
+const { posts } = Astro.props;
+
+const renderedPosts = await Promise.all(
+	posts.map(async (post) => ({ post, Content: (await render(post)).Content })),
+);
+---
+
+{
+	posts.length === 0 ? (
+		<p>Noch keine Beiträge.</p>
+	) : (
+		renderedPosts.map(({ post, Content }, i) => (
+			<>
+				{i > 0 && <hr class="post-separator" />}
+				<PostArticle {...post.data} href={`/beitrag/${post.id}`} excerpt={post.data.tldr}>
+					<Content />
+				</PostArticle>
+			</>
+		))
+	)
+}
+
+<style>
+	.post-separator {
+		border: none;
+		width: 100cqw;
+		height: 20px;
+		margin: 3em 0 3em 50%;
+		transform: translateX(-50%);
+		background-color: rgba(255, 255, 255, 0.398);
+	}
+</style>

@@ -24,6 +24,8 @@ const posts = defineCollection({
 			tags: z.array(z.string()).optional(),
 			// Draft posts only build/render in `astro dev`; excluded from production builds.
 			draft: z.boolean().optional().default(false),
+			// Show only the first paragraph on the index page, with a "Weiterlesen" link.
+			tldr: z.boolean().optional().default(false),
 		}),
 });
 
