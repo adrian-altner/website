@@ -113,22 +113,43 @@ strong, b {
 	font-weight: bold;
 }
 
-img {
+img, video {
 	max-width: 100%;
 	height: auto;
 	border-radius: 4px;
 }
 
-.prose img {
+/* Bleed frame for photos/videos in post content — a wrapper (not the media
+   element itself) carries the bleed width, so shrinking the viewport height
+   (which caps the media by `max-height` below) scales down the photo/video
+   only, not the surrounding frame narrower than its intended bleed width. */
+.prose .media-frame {
 	display: block;
-	width: auto;
-	max-width: min(var(--media-width), calc(100cqw - 2em));
-	max-height: calc(100vh - 4rlh);
+	width: min(var(--media-width), calc(100cqw - 2em));
 	margin-left: 50%;
 	transform: translateX(-50%);
 	padding: 1rlh;
-	background-color: #d4d4ce;
-	box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+	background-color: #ffffff68;
+	/* box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15); */
+	text-align: center;
+}
+
+/* Each `img`/`video` sets `--ar: <width> / <height>` inline (its real,
+   known aspect ratio). Browsers resolve `max-width` and `max-height`
+   independently, so capping both on one box doesn't reliably preserve
+   aspect ratio (confirmed: it doesn't, here) — for a plain photo that just
+   distorts the picture, but for `<video>` it also leaves native controls
+   sized to the (wrongly-proportioned) box instead of hugging the visible
+   frame. Computing `width` ourselves from the height cap and letting
+   `aspect-ratio` derive `height` sidesteps that: the box is always
+   correctly proportioned, so nothing needs `object-fit` or `max-height`. */
+.prose .media-frame > img,
+.prose .media-frame video {
+	display: inline-block;
+	aspect-ratio: var(--ar);
+	width: min(var(--media-width), calc(100cqw - 2em), calc((100vh - 4rlh) * var(--ar)));
+	height: auto;
+	vertical-align: middle;
 }
 
 code {
@@ -223,6 +244,23 @@ th, td {
 
 @media (max-width: 600px) {
 	main { padding: 0 1em 3em; }
+
+	/* No room to bleed wider than the text column on small screens, and the
+	   card look (background/padding/shadow) just eats space — drop the frame
+	   and let the photo/video sit flush with the text width instead. */
+	.prose .media-frame {
+		width: 100%;
+		margin-left: 0;
+		transform: none;
+		padding: 0;
+		background-color: transparent;
+		box-shadow: none;
+	}
+
+	.prose .media-frame > img,
+	.prose .media-frame video {
+		width: min(100%, calc((100vh - 4rlh) * var(--ar)));
+	}
 }
 
 /* Scraper deterrent for contact details (Impressum/Datenschutz): text content

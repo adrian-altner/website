@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# raw camera/video source files (optimized versions are committed instead)
+src/content/posts/**/*.mov
