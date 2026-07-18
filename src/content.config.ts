@@ -3,14 +3,10 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
 const posts = defineCollection({
-	// Load Markdown and MDX files from `src/content/posts/` — the
-	// year/month/day subdirectory structure is just source-side
-	// organization, so strip it back out of the generated id to keep post
-	// URLs as the bare filename (e.g. `/beitrag/hallo-welt/`).
+	// Load Markdown and MDX files from `src/content/posts/`.
 	loader: glob({
 		base: './src/content/posts',
 		pattern: '**/*.{md,mdx}',
-		generateId: ({ entry }) => entry.split('/').pop().replace(/\.(md|mdx)$/, ''),
 	}),
 	// Type-check frontmatter using a schema
 	schema: ({ image }) =>
