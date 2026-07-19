@@ -31,7 +31,6 @@ const { title, pubDate, updatedDate, tags, heroImage, href, excerpt } = Astro.pr
 				</p>
 			</div>
 		</div>
-		<hr class="divider" />
 	</header>
 	<div class:list={['prose', excerpt && 'prose--excerpt']}>
 		<slot />
@@ -48,7 +47,7 @@ const { title, pubDate, updatedDate, tags, heroImage, href, excerpt } = Astro.pr
 
 <style>
 	.post-header {
-		margin-top: 0;
+		margin: 1.5em 0;
 	}
 	.post-header h1 {
 		font-size: 1.6em;

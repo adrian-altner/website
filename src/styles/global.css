@@ -119,10 +119,11 @@ img, video {
 	border-radius: 4px;
 }
 
-/* Bleed frame for photos/videos in post content — a wrapper (not the media
-   element itself) carries the bleed width, so shrinking the viewport height
-   (which caps the media by `max-height` below) scales down the photo/video
-   only, not the surrounding frame narrower than its intended bleed width. */
+/* Bleed frame for photos in post content — a wrapper (not the media element
+   itself) carries the bleed width, so shrinking the viewport height (which
+   caps the media by `max-height` below) scales down the photo only, not the
+   surrounding frame narrower than its intended bleed width. Scoped to
+   `.media-frame`, not all of `.prose` — plain body text isn't a media frame. */
 .prose .media-frame {
 	display: block;
 	width: min(var(--media-width), calc(100cqw - 2em));
@@ -134,20 +135,20 @@ img, video {
 	text-align: center;
 }
 
-/* Each `img`/`video` sets `--ar: <width> / <height>` inline (its real,
-   known aspect ratio). Browsers resolve `max-width` and `max-height`
-   independently, so capping both on one box doesn't reliably preserve
-   aspect ratio (confirmed: it doesn't, here) — for a plain photo that just
-   distorts the picture, but for `<video>` it also leaves native controls
-   sized to the (wrongly-proportioned) box instead of hugging the visible
-   frame. Computing `width` ourselves from the height cap and letting
-   `aspect-ratio` derive `height` sidesteps that: the box is always
-   correctly proportioned, so nothing needs `object-fit` or `max-height`. */
-.prose .media-frame > img,
-.prose .media-frame video {
+/* `.media-frame` is produced by the `remarkMediaFrame` plugin (src/lib/remark-media-frame.mjs)
+   from `![alt](src "frame")` — no video anymore, so plain `max-width`/`max-height`
+   with `width`/`height: auto` preserves the photo's aspect ratio just fine (the
+   `width`/`height` attributes Astro adds to markdown images give browsers the
+   intrinsic ratio), no need to compute anything from a custom property.
+   Subtracts `2rlh` (the frame's `1rlh` padding on each side) from both terms —
+   otherwise, once the photo is wide enough to be width- rather than
+   height-bound, it can render wider than the frame's padded content box and
+   spill over the padding. */
+.prose .media-frame img {
 	display: inline-block;
-	aspect-ratio: var(--ar);
-	width: min(var(--media-width), calc(100cqw - 2em), calc((100vh - 4rlh) * var(--ar)));
+	max-width: min(calc(var(--media-width) - 2rlh), calc(100cqw - 2em - 2rlh));
+	max-height: calc(100vh - 4rlh);
+	width: auto;
 	height: auto;
 	vertical-align: middle;
 }
@@ -247,7 +248,7 @@ th, td {
 
 	/* No room to bleed wider than the text column on small screens, and the
 	   card look (background/padding/shadow) just eats space — drop the frame
-	   and let the photo/video sit flush with the text width instead. */
+	   and let the photo sit flush with the text width instead. */
 	.prose .media-frame {
 		width: 100%;
 		margin-left: 0;
@@ -257,9 +258,8 @@ th, td {
 		box-shadow: none;
 	}
 
-	.prose .media-frame > img,
-	.prose .media-frame video {
-		width: min(100%, calc((100vh - 4rlh) * var(--ar)));
+	.prose .media-frame img {
+		max-width: 100%;
 	}
 }
 
@@ -281,4 +281,48 @@ th, td {
 	clip: rect(1px, 1px, 1px, 1px);
 	clip-path: inset(50%);
 	white-space: nowrap;
+}
+
+/* Profile header (ueber-mich page): photo + tagline shown side by side
+   instead of the usual visible "<h1>{title}</h1>" page header. */
+.profile-header {
+	display: flex;
+	align-items: center;
+	gap: 1.5em;
+	flex-wrap: wrap;
+	margin: 0 0 5em;
+}
+.profile-photo {
+	width: 200px;
+	max-width: 200px;
+	height: 200px;
+	margin: 0;
+	padding: 0;
+	transform: none;
+	background-color: transparent;
+	box-shadow: none;
+	object-fit: cover;
+	flex-shrink: 0;
+	border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+	border: 3px solid #fff;
+}
+.profile-intro {
+	flex: 1;
+	min-width: 200px;
+	margin: 0;
+	max-width: 22ch;
+	font-family: var(--font-heading), system-ui, sans-serif;
+	font-size: 1.6em;
+	font-weight: 500;
+	line-height: 1.35;
+	color: var(--text);
+}
+.profile-intro-sub {
+	font-weight: 350;
+	font-size: 0.85em;
+}
+.profile-intro u {
+	text-decoration: underline;
+	text-decoration-color: var(--accent);
+	text-underline-offset: 0.15em;
 }

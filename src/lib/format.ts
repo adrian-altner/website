@@ -15,7 +15,3 @@ export function formatDate(date: Date, options?: { iso?: boolean }) {
 		day: 'numeric',
 	});
 }
-
-export function postUrl(id: string) {
-	return `/beitrag/${id}/`;
-}

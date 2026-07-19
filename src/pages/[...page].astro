@@ -1,0 +1,64 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import PostLayout from '@/layouts/PostLayout.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { SITE_TITLE, POSTS_PER_PAGE } from '@/consts';
+import { getSortedPosts } from '@/lib/posts';
+
+export const getStaticPaths = (async ({ paginate }) => {
+	const posts = await getSortedPosts();
+	return paginate(posts, { pageSize: POSTS_PER_PAGE });
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+const title = page.currentPage === 1 ? SITE_TITLE : `${SITE_TITLE} — Seite ${page.currentPage}`;
+const { prev: prevUrl, next: nextUrl } = page.url;
+
+const renderedPosts = await Promise.all(
+	page.data.map(async (post) => ({ post, Content: (await render(post)).Content })),
+);
+---
+
+<BaseLayout title={title} description="Alle Beiträge">
+	<h1 class="sr-only">{SITE_TITLE}</h1>
+	{
+		page.data.length === 0 ? (
+			<p>Noch keine Beiträge.</p>
+		) : (
+			renderedPosts.map(({ post, Content }, i) => (
+				<>
+					{i > 0 && <hr class="post-separator" />}
+					<PostLayout {...post.data} href={`/${post.id}`} excerpt={post.data.tldr}>
+						<Content />
+					</PostLayout>
+				</>
+			))
+		)
+	}
+	{
+		(prevUrl || nextUrl) && (
+			<nav class="pagination" aria-label="Seitennavigation">
+				{prevUrl ? <a href={prevUrl}>← Neuere Beiträge</a> : <span />}
+				{nextUrl && <a href={nextUrl}>Ältere Beiträge →</a>}
+			</nav>
+		)
+	}
+</BaseLayout>
+
+<style>
+	.post-separator {
+		border: none;
+		width: 100cqw;
+		height: 20px;
+		margin: 3em 0 3em 50%;
+		transform: translateX(-50%);
+		background-color: rgba(255, 255, 255, 0.398);
+	}
+	.pagination {
+		display: flex;
+		justify-content: space-between;
+		gap: 1em;
+		margin-top: 3em;
+	}
+</style>

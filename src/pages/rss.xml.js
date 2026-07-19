@@ -10,7 +10,7 @@ export async function GET(context) {
 		site: context.site,
 		items: posts.map((post) => ({
 			...post.data,
-			link: `/beitrag/${post.id}/`,
+			link: `/${post.id}/`,
 		})),
 		stylesheet: '/rss/styles.xsl',
 		customData: '<language>de-de</language>',

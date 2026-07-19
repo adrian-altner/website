@@ -1,13 +1,17 @@
 // @ts-check
 
-import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
+import { unified } from '@astrojs/markdown-remark';
 import { defineConfig, fontProviders } from 'astro/config';
+import { remarkMediaFrame } from './src/lib/remark-media-frame.mjs';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://achis.blog',
-	integrations: [mdx(), sitemap()],
+	integrations: [sitemap()],
+	markdown: {
+		processor: unified({ remarkPlugins: [remarkMediaFrame] }),
+	},
 	fonts: [
 		{
 			provider: fontProviders.local(),
